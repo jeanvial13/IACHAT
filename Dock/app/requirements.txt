@@ -1,6 +1,0 @@
-flask
-openai
-flask-socketio
-python-socketio
-
-
