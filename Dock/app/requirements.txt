@@ -1,3 +1,6 @@
 flask
 openai
-python-dotenv
+flask-socketio
+python-socketio
+
+
