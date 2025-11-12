@@ -1,293 +1,201 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>IACHAT_PRO v3 — Terminal</title>
-  <link rel="stylesheet" href="/static/style.css"/>
-  <link rel="stylesheet" href="/static/modal.css"/>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IACHAT_PRO v3</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    body {
+      background: #000;
+      color: #00ff88;
+      font-family: "Courier New", monospace;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      border-bottom: 1px solid #00ff88;
+      padding: 10px;
+      font-weight: bold;
+      text-align: center;
+    }
+    #chat-box {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      border: 1px solid #00ff88;
+      margin: 10px;
+      border-radius: 8px;
+      background: #010a01;
+    }
+    #input-area {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      border-top: 1px solid #00ff88;
+      background: #000;
+      gap: 8px;
+    }
+    textarea {
+      flex: 1;
+      background: #000;
+      border: 1px solid #00ff88;
+      color: #00ff88;
+      padding: 10px;
+      font-size: 14px;
+      border-radius: 5px;
+      resize: none;
+      overflow-y: hidden;
+      font-family: "Courier New", monospace;
+    }
+    button {
+      background: #00ff88;
+      color: #000;
+      font-weight: bold;
+      border: none;
+      border-radius: 5px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #22ffaa;
+    }
+    .msg {
+      margin-bottom: 10px;
+      white-space: pre-wrap;
+    }
+    .user { color: #00ff88; text-align: right; }
+    .assistant { color: #fff; text-align: left; }
+    #toolbar {
+      display: flex;
+      justify-content: flex-end;
+      padding: 6px;
+      border-bottom: 1px solid #00ff88;
+      background: #020c02;
+      gap: 10px;
+    }
+    #toolbar button {
+      background: none;
+      color: #00ff88;
+      border: 1px solid #00ff88;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    #toolbar button:hover {
+      background: #00ff88;
+      color: #000;
+    }
+  </style>
 </head>
+
 <body>
-  <div class="terminal">
-    <div class="terminal-header">
-      IACHAT_PRO v3 :: <span class="muted">online</span>
-      <div class="project-bar">
-        <span>📁</span>
-        <select id="project-select" class="select"></select>
-        <button id="btn-newproject" class="btn small">+ Nuevo</button>
-        <button id="btn-export" class="btn small">💾 Exportar</button>
-        <button id="btn-credits" class="btn small">💳 Créditos</button>
-      </div>
-    </div>
+  <header>IACHAT_PRO v3 :: online</header>
 
-    <div id="log" class="terminal-log">
-      <div class="line muted"># Proyecto cargado. Usa /help para ver comandos. Auto-save cada 30s.</div>
-    </div>
-
-    <div class="upload-row">
-      <input id="file-input" type="file" multiple />
-      <button id="btn-upload" class="btn">upload</button>
-      <button id="btn-refresh" class="btn ghost">ls downloads</button>
-    </div>
-
-    <div class="chat-row">
-      <span class="prompt">user@iachat&gt;</span>
-      <textarea id="chat-input" class="chat-input" rows="1" placeholder="Escribe... (Shift+Enter = nueva línea)" autofocus></textarea>
-      <button id="send-btn" class="btn small">➤</button>
-    </div>
+  <div id="toolbar">
+    <button id="btn-new">+ Nuevo</button>
+    <button id="btn-export">💾 Exportar</button>
+    <button id="btn-credits">💳 Créditos</button>
   </div>
 
-  <!-- Modal Créditos -->
-  <div id="credits-modal" class="modal-overlay hidden">
-    <div class="modal">
-      <div class="modal-header">
-        <span>💳 Créditos actuales</span>
-        <button id="modal-close" class="btn small">Cerrar</button>
-      </div>
-      <div class="modal-body">
-        <div class="modal-info">
-          <div><b>Modelo:</b> <span id="m-model">-</span></div>
-          <div><b>Prompt tokens:</b> <span id="m-prompt">0</span></div>
-          <div><b>Completion tokens:</b> <span id="m-completion">0</span></div>
-          <div><b>Costo estimado:</b> $<span id="m-cost">0.000000</span> USD</div>
-          <div class="muted">* Estimado local con tokens de la API</div>
-        </div>
-        <div class="modal-chart">
-          <canvas id="credits-chart" width="260" height="260"></canvas>
-        </div>
-      </div>
-    </div>
+  <div id="chat-box">
+    <div># Proyecto cargado. Usa /help para ver comandos. Auto-save cada 30s.</div>
   </div>
 
-  <script type="module">
-    import { enableDragDrop } from "/static/js/dragdrop.js";
+  <div id="input-area">
+    <input type="file" id="file-input" multiple style="color:#00ff88;">
+    <button id="btn-upload">upload</button>
+    <textarea id="msg" rows="1" placeholder="Escribe tu mensaje... (Shift+Enter para nueva línea)"></textarea>
+    <button id="send-btn">➤</button>
+  </div>
 
-    const log = document.getElementById('log');
-    const input = document.getElementById('chat-input');
-    const sendBtn = document.getElementById('send-btn');
-    const fileInput = document.getElementById('file-input');
-    const btnUpload = document.getElementById('btn-upload');
-    const btnRefresh = document.getElementById('btn-refresh');
-    const btnCredits = document.getElementById('btn-credits');
-    const btnExport = document.getElementById('btn-export');
-    const btnNewProject = document.getElementById('btn-newproject');
-    const projectSelect = document.getElementById('project-select');
+  <script>
+    const chatBox = document.getElementById("chat-box");
+    const input = document.getElementById("msg");
+    const sendBtn = document.getElementById("send-btn");
+    const uploadBtn = document.getElementById("btn-upload");
+    const fileInput = document.getElementById("file-input");
 
-    let currentProject = localStorage.getItem('project') || 'default';
-    let chart;
-    let autosaveTimer;
+    // Enviar mensaje con Enter
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
 
-    function appendLine(text, cls=''){
-      const d = document.createElement('div');
-      d.className = 'line ' + cls;
-      d.innerHTML = text;
-      log.appendChild(d); log.scrollTop = log.scrollHeight;
+    // Ajuste dinámico de altura
+    input.addEventListener("input", () => {
+      input.style.height = "auto";
+      input.style.height = input.scrollHeight + "px";
+    });
+
+    sendBtn.addEventListener("click", sendMessage);
+
+    function appendMessage(sender, text) {
+      const div = document.createElement("div");
+      div.classList.add("msg", sender);
+      div.textContent = text;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    async function typeWrite(prefix, text, cls='bot'){
-      const container = document.createElement('div');
-      container.className = 'line ' + cls;
-      log.appendChild(container);
-      let i = 0;
-      const step = () => {
-        if(i <= text.length){
-          container.innerHTML = prefix + text.slice(0, i);
-          log.scrollTop = log.scrollHeight;
-          i++;
-          setTimeout(step, 10);
-        }
-      };
-      step();
-    }
-
-    async function fetchProjects(){
-      const r = await fetch('/projects');
-      const data = await r.json();
-      projectSelect.innerHTML = '';
-      data.projects.forEach(p=>{
-        const opt = document.createElement('option');
-        opt.value = p; opt.textContent = p;
-        if(p === currentProject) opt.selected = true;
-        projectSelect.appendChild(opt);
-      });
-      if(!data.projects.includes(currentProject)){
-        currentProject = 'default';
-        localStorage.setItem('project', currentProject);
+    async function sendMessage() {
+      const msg = input.value.trim();
+      if (!msg) return;
+      appendMessage("user", msg);
+      input.value = "";
+      input.style.height = "auto";
+      appendMessage("assistant", "…");
+      try {
+        const res = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: msg }),
+        });
+        const data = await res.json();
+        typeWriter(data.reply);
+      } catch (e) {
+        appendMessage("assistant", "⚠️ Error de conexión con el servidor");
       }
     }
 
-    async function sendChat(message){
-      // Comandos locales
-      if(message === '/clear'){ log.innerHTML=''; return; }
-      if(message === '/help'){ appendLine('<span class="muted"># /help, /clear, /files, /credits, /upload, /list, /new nombre, /use nombre, /export</span>'); return; }
-      if(message === '/files'){
-        const f = fileInput.files;
-        if(!f.length){ appendLine('<span class="muted"># (no hay archivos seleccionados)</span>'); return; }
-        for (let i=0;i<f.length;i++){ appendLine('- ' + f[i].name + ' (' + f[i].size + ' bytes)'); }
+    // Animación de escritura tipo ChatGPT
+    function typeWriter(text) {
+      const last = document.querySelector(".assistant:last-child");
+      last.textContent = "";
+      let i = 0;
+      const timer = setInterval(() => {
+        last.textContent += text.charAt(i);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        i++;
+        if (i >= text.length) clearInterval(timer);
+      }, 20);
+    }
+
+    // Upload
+    uploadBtn.addEventListener("click", async () => {
+      const files = fileInput.files;
+      if (!files.length) {
+        appendMessage("assistant", "# No se seleccionó ningún archivo");
         return;
       }
-      if(message === '/credits'){ return showCredits(); }
-      if(message === '/upload'){ return triggerUpload(); }
-      if(message === '/list'){ await fetchProjects(); appendLine('<span class="muted"># Proyectos:</span> ' + Array.from(projectSelect.options).map(o=>o.value).join(', ')); return; }
-      if(message.startsWith('/new ')){
-        const name = message.slice(5).trim();
-        if(!name){ appendLine('<span class="error"># Nombre inválido</span>','error'); return; }
-        currentProject = name.toLowerCase().replace(/[^a-z0-9_\- ]+/g,'').replace(/\s+/g,'_') || 'default';
-        localStorage.setItem('project', currentProject);
-        await fetchProjects(); appendLine('# Proyecto creado/cambiado → ' + currentProject, 'muted'); return;
-      }
-      if(message.startsWith('/use ')){
-        const name = message.slice(5).trim();
-        if(!name){ appendLine('<span class="error"># Nombre inválido</span>','error'); return; }
-        currentProject = name;
-        localStorage.setItem('project', currentProject);
-        await fetchProjects(); appendLine('# Proyecto cambiado → ' + currentProject, 'muted'); return;
-      }
-      if(message === '/export'){ return doExport(); }
-
-      appendLine(`<span class="user">user@${currentProject}&gt;</span> ${message}`, 'user');
-      try{
-        const r = await fetch('/chat', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({message, project: currentProject})
-        });
-        const data = await r.json();
-        if(data.reply){ typeWrite('<span class="bot">gpt@response&gt;</span> ', data.reply); }
-        else{ appendLine(`<span class="error">error&gt;</span> ${data.error || 'unknown error'}`, 'error'); }
-      }catch(e){ appendLine(`<span class="error">net&gt;</span> ${e}`, 'error'); }
-    }
-
-    // Auto expand textarea (ChatGPT-like)
-    input.addEventListener('input', ()=>{
-      input.style.height='auto';
-      input.style.height=(input.scrollHeight)+'px';
-    });
-
-    // Enter envía, Shift+Enter salto de línea
-    input.addEventListener('keydown', (e)=>{
-      if(e.key === 'Enter' && !e.shiftKey){
-        e.preventDefault();
-        const msg = input.value.trim();
-        if(!msg) return;
-        input.value=''; input.style.height='auto';
-        sendChat(msg);
-      }
-    });
-    sendBtn.addEventListener('click', ()=>{
-      const msg = input.value.trim();
-      if(!msg) return;
-      input.value=''; input.style.height='auto';
-      sendChat(msg);
-    });
-
-    async function triggerUpload(){
-      const files = fileInput.files;
-      if(!files.length){ appendLine('<span class="muted"># Selecciona archivo(s) o arrastra a la consola</span>'); return; }
-      appendLine(`<span class="user">user@${currentProject}&gt;</span> upload ${files.length} archivo(s)...`, 'user');
-      const fd = new FormData();
-      for (let i=0;i<files.length;i++){ fd.append('file', files[i]); }
-      try{
-        const r = await fetch('/upload', { method:'POST', body: fd });
-        const data = await r.json();
-        if(data.zip){
-          appendLine(`<span class="ok">ok&gt;</span> ZIP listo → <a href="/downloads/${encodeURIComponent(data.zip)}" class="link" download>${data.zip}</a>`);
-        }else{
-          appendLine(`<span class="error">error&gt;</span> ${data.error || 'no zip generated'}`, 'error');
+      const form = new FormData();
+      for (let f of files) form.append("file", f);
+      appendMessage("user", `Subiendo ${files.length} archivo(s)...`);
+      try {
+        const res = await fetch("/upload", { method: "POST", body: form });
+        const data = await res.json();
+        if (data.zip) {
+          appendMessage("assistant", `Archivo ZIP listo: ${data.zip}`);
+        } else {
+          appendMessage("assistant", "⚠️ Error al generar ZIP");
         }
-      }catch(e){ appendLine(`<span class="error">net&gt;</span> ${e}`, 'error'); }
-    }
-    btnUpload.addEventListener('click', triggerUpload);
-
-    btnRefresh.addEventListener('click', async ()=>{
-      appendLine('<span class="muted"># listando /downloads ...</span>');
-      const r = await fetch('/list');
-      const data = await r.json();
-      if(!data.files || !data.files.length){ appendLine('<span class="muted"># (vacío)</span>'); return; }
-      data.files.forEach(f=> appendLine(`- <a class="link" href="/downloads/${encodeURIComponent(f.name)}" download>${f.name}</a> <span class="muted">${f.mtime}</span>`));
-    });
-
-    // Créditos con modal + Chart.js
-    const modal = document.getElementById('credits-modal');
-    const modalClose = document.getElementById('modal-close');
-    const mModel = document.getElementById('m-model');
-    const mPrompt = document.getElementById('m-prompt');
-    const mCompletion = document.getElementById('m-completion');
-    const mCost = document.getElementById('m-cost');
-    let creditsChart;
-
-    async function showCredits(){
-      try{
-        const r = await fetch('/credits');
-        const data = await r.json();
-        mModel.textContent = data.model;
-        mPrompt.textContent = data.prompt_tokens;
-        mCompletion.textContent = data.completion_tokens;
-        mCost.textContent = data.estimated_cost_usd;
-
-        modal.classList.remove('hidden');
-        const ctx = document.getElementById('credits-chart').getContext('2d');
-        if(creditsChart){ creditsChart.destroy(); }
-        creditsChart = new Chart(ctx, {
-          type: 'doughnut',
-          data: {
-            labels: ['Prompt', 'Completion'],
-            datasets: [{
-              data: [data.prompt_tokens, data.completion_tokens],
-              backgroundColor: ['#00ff88','#00a8ff'],
-              borderColor: ['#0f0f0f','#0f0f0f']
-            }]
-          },
-          options: { responsive: false, plugins: { legend: { labels: { color: '#c9d1d9' } } } }
-        });
-      }catch(e){ appendLine(`<span class="error">credits&gt;</span> ${e}`, 'error'); }
-    }
-    btnCredits.addEventListener('click', showCredits);
-    modalClose.addEventListener('click', ()=> modal.classList.add('hidden'));
-    window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') modal.classList.add('hidden'); });
-
-    // Crear/usar proyecto desde UI
-    btnNewProject.addEventListener('click', async ()=>{
-      const name = prompt('Nombre del nuevo proyecto:');
-      if(!name) return;
-      currentProject = name.toLowerCase().replace(/[^a-z0-9_\- ]+/g,'').replace(/\s+/g,'_') || 'default';
-      localStorage.setItem('project', currentProject);
-      await fetchProjects();
-      appendLine('# Proyecto creado/cambiado → ' + currentProject, 'muted');
-    });
-    projectSelect.addEventListener('change', async (e)=>{
-      currentProject = e.target.value;
-      localStorage.setItem('project', currentProject);
-      appendLine('# Proyecto cambiado → ' + currentProject, 'muted');
-    });
-
-    // Exportar chat del proyecto actual
-    async function doExport(){
-      const a = document.createElement('a');
-      a.href = '/project/export?project=' + encodeURIComponent(currentProject);
-      a.download = `${currentProject}_chat_export.zip`;
-      document.body.appendChild(a); a.click(); a.remove();
-    }
-    btnExport.addEventListener('click', doExport);
-
-    // Drag & Drop en la consola
-    enableDragDrop(
-      document.querySelector('.terminal-log'),
-      log,
-      (count)=> appendLine(`<span class="muted"># Subiendo ${count} archivo(s)...</span>`),
-      (data)=>{
-        if(data.zip){
-          appendLine(`<span class="ok">ok&gt;</span> ZIP listo → <a href="/downloads/${encodeURIComponent(data.zip)}" class="link" download>${data.zip}</a>`);
-        }else{
-          appendLine(`<span class="error">error&gt;</span> ${data.error || 'no zip generated'}`, 'error');
-        }
+      } catch {
+        appendMessage("assistant", "⚠️ Error en la conexión durante la subida");
       }
-    );
-
-    // Init
-    await fetchProjects();
-    input.focus();
+    });
   </script>
 </body>
 </html>
