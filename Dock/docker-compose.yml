@@ -5,10 +5,11 @@ services:
     container_name: gpt-file-processor
     ports:
       - "8080:8080"
-    env_file:
-      - .env
+    environment:
+       OPENAI_API_KEY: ${OPENAI_API_KEY}
     volumes:
       - ./app/uploads:/app/uploads
       - ./app/downloads:/app/downloads
       - ./app/logs:/app/logs
     restart: unless-stopped
+
