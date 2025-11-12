@@ -1,0 +1,20 @@
+version: "3.9"
+
+services:
+  iachatprov3:
+    build:
+      context: ..
+      dockerfile: Dock/Dockerfile
+    container_name: iachatprov3
+    ports:
+      - "8080:8080"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+    volumes:
+      - iachat_data:/data
+      - ./app/downloads:/app/downloads
+    restart: unless-stopped
+
+volumes:
+  iachat_data:
