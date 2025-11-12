@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IACHAT_PRO v3</title>
+  <link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+  <header>IACHAT_PRO v3 :: online</header>
+
+  <div id="chat-container">
+    <div id="chat-log"></div>
+
+    <div id="chat-input-area">
+      <input id="file-input" type="file" multiple />
+      <textarea id="chat-input" placeholder="Escribe tu mensaje aquí..." rows="1" autofocus></textarea>
+      <button id="send-btn">➤</button>
+    </div>
+  </div>
+
+  <script>
+    const input = document.getElementById("chat-input");
+    const sendBtn = document.getElementById("send-btn");
+    const chatLog = document.getElementById("chat-log");
+    const fileInput = document.getElementById("file-input");
+
+    input.addEventListener("input", () => {
+      input.style.height = "auto";
+      input.style.height = input.scrollHeight + "px";
+    });
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    sendBtn.addEventListener("click", sendMessage);
+
+    function appendMessage(sender, text) {
+      const msg = document.createElement("div");
+      msg.classList.add("msg", sender);
+      msg.innerHTML = `<pre>${text}</pre>`;
+      chatLog.appendChild(msg);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const msg = input.value.trim();
+      if (!msg) return;
+      appendMessage("user", msg);
+      input.value = "";
+      input.style.height = "auto";
+      appendMessage("assistant", "…");
+      try {
+        const res = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: msg })
+        });
+        const data = await res.json();
+        if (data.reply) {
+          typeWriter(data.reply);
+        } else if (data.error) {
+          appendMessage("assistant", "⚠️ " + data.error);
+        } else {
+          appendMessage("assistant", "⚠️ Respuesta inesperada");
+        }
+      } catch (err) {
+        appendMessage("assistant", "⚠️ Error de conexión: " + err);
+      }
+    }
+
+    function typeWriter(text) {
+      const msgs = chatLog.querySelectorAll(".assistant");
+      const last = msgs[msgs.length - 1];
+      if (!last) return;
+      last.querySelector('pre').textContent = "";
+      let i = 0;
+      const t = setInterval(() => {
+        last.querySelector('pre').textContent += text[i] || '';
+        chatLog.scrollTop = chatLog.scrollHeight;
+        i++;
+        if (i >= text.length) clearInterval(t);
+      }, 15);
+    }
+  </script>
+</body>
+</html>
