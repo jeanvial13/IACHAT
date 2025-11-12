@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IACHAT_PRO — Terminal</title>
+  <link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+  <div class="terminal">
+    <div class="terminal-header">
+      IACHAT_PRO :: Terminal — <span class="ok">online</span>
+      <button id="btn-credits" class="btn small right">💳 Créditos restantes</button>
+    </div>
+    <div id="log" class="terminal-log">
+      <div class="line muted"># Bienvenido. Sube archivos o escribe comandos. Comandos: /help, /clear, /files, /credits</div>
+    </div>
+
+    <div class="upload-row">
+      <input id="file-input" type="file" multiple />
+      <button id="btn-upload" class="btn">upload</button>
+      <button id="btn-refresh" class="btn ghost">ls downloads</button>
+    </div>
+
+    <div class="chat-row">
+      <span class="prompt">user@iachat&gt;</span>
+      <input id="chat-input" class="chat-input" placeholder="Escribe y Enter...  (/help para comandos)" autofocus />
+      <span class="cursor">█</span>
+    </div>
+  </div>
+
+  <script>
+    const log = document.getElementById('log');
+    const input = document.getElementById('chat-input');
+    const fileInput = document.getElementById('file-input');
+    const btnUpload = document.getElementById('btn-upload');
+    const btnRefresh = document.getElementById('btn-refresh');
+    const btnCredits = document.getElementById('btn-credits');
+
+    function appendLine(text, cls=''){
+      const d = document.createElement('div');
+      d.className = 'line ' + cls;
+      d.innerHTML = text;
+      log.appendChild(d);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    async function typeWrite(prefix, text, cls='bot'){
+      const container = document.createElement('div');
+      container.className = 'line ' + cls;
+      log.appendChild(container);
+      let i = 0;
+      const step = () => {
+        if(i <= text.length){
+          container.innerHTML = prefix + text.slice(0, i);
+          log.scrollTop = log.scrollHeight;
+          i++;
+          setTimeout(step, 10);
+        }
+      };
+      step();
+    }
+
+    async function sendChat(message){
+      // Comandos
+      if(message === '/clear'){ log.innerHTML = ''; return; }
+      if(message === '/help'){
+        appendLine('<span class="muted"># Comandos: /clear, /help, /files, /credits</span>'); return;
+      }
+      if(message === '/files'){
+        const f = fileInput.files;
+        if(!f.length){ appendLine('<span class="muted"># (no hay archivos seleccionados en el input)</span>'); return; }
+        for (let i=0;i<f.length;i++){
+          appendLine('- ' + f[i].name + ' (' + f[i].size + ' bytes)');
+        }
+        return;
+      }
+      if(message === '/credits'){ return showCredits(); }
+
+      appendLine(`<span class="user">user@iachat&gt;</span> ${message}`, 'user');
+      try{
+        const r = await fetch('/chat', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({message})
+        });
+        const data = await r.json();
+        if(data.reply){
+          typeWrite('<span class="bot">gpt@response&gt;</span> ', data.reply);
+        }else{
+          appendLine(`<span class="error">error&gt;</span> ${data.error || 'unknown error'}`, 'error');
+        }
+      }catch(e){
+        appendLine(`<span class="error">net&gt;</span> ${e}`, 'error');
+      }
+    }
+
+    input.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter'){
+        const msg = input.value.trim();
+        if(!msg) return;
+        input.value='';
+        sendChat(msg);
+      }
+    });
+
+    btnUpload.addEventListener('click', async ()=>{
+      const files = fileInput.files;
+      if(!files.length){ appendLine('<span class="muted"># Selecciona archivo(s) primero</span>'); return; }
+      appendLine(`<span class="user">user@iachat&gt;</span> upload ${files.length} archivo(s)...`, 'user');
+      const fd = new FormData();
+      for (let i=0;i<files.length;i++){ fd.append('file', files[i]); }
+      try{
+        const r = await fetch('/upload', { method:'POST', body: fd });
+        const data = await r.json();
+        if(data.zip){
+          appendLine(`<span class="ok">ok&gt;</span> ZIP listo → <a href="/downloads/${encodeURIComponent(data.zip)}" class="link" download>${data.zip}</a>`);
+        }else{
+          appendLine(`<span class="error">error&gt;</span> ${data.error || 'no zip generated'}`, 'error');
+        }
+      }catch(e){
+        appendLine(`<span class="error">net&gt;</span> ${e}`, 'error');
+      }
+    });
+
+    btnRefresh.addEventListener('click', async ()=>{
+      appendLine('<span class="muted"># listando /downloads ...</span>');
+      const r = await fetch('/list');
+      const data = await r.json();
+      if(!data.files || !data.files.length){
+        appendLine('<span class="muted"># (vacío)</span>');
+        return;
+      }
+      data.files.forEach(f=>{
+        appendLine(`- <a class="link" href="/downloads/${encodeURIComponent(f.name)}" download>${f.name}</a> <span class="muted">${f.mtime}</span>`);
+      });
+    });
+
+    async function showCredits(){
+      try{
+        const r = await fetch('/credits');
+        const data = await r.json();
+        const txt = `Modelo: ${data.model}\nPrompt tokens: ${data.prompt_tokens}\nCompletion tokens: ${data.completion_tokens}\nCosto estimado: $${data.estimated_cost_usd} USD\nNota: ${data.note}`;
+        typeWrite('<span class="bot">gpt@credits&gt;</span> ', txt.replaceAll('\n','  '));
+      }catch(e){
+        appendLine(`<span class="error">credits&gt;</span> ${e}`, 'error');
+      }
+    }
+    btnCredits.addEventListener('click', showCredits);
+  </script>
+</body>
+</html>
