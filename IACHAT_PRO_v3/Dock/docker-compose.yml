@@ -9,8 +9,8 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+  - OPENAI_API_KEY=sk-svcacct-HaptIC3j7rjc5RzqUZ2S0lzHqqb1coVzeBzTduSMpPD8QrsqpodQNBUL1UoO6XzsuAM_6PCzpxT3BlbkFJQDQYhJou4u9al_Bk5ipuGpbN1W6fUlghxoFivAWR-Ksw4glVMwXevbUrPuSJqhIxQ6dzknEkUAw0WVTH1iFGyaAiz523DXEqF1RREjjmMALmsZEewPpPKAUnY7kXqLyKs4A
+  - OPENAI_MODEL=gpt-4o-mini
     volumes:
       - iachat_data:/data
       - ./app/downloads:/app/downloads
