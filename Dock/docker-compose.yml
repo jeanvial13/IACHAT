@@ -1,0 +1,14 @@
+version: "3.8"
+services:
+  gptfileapp:
+    build: .
+    container_name: gpt-file-processor
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./app/uploads:/app/uploads
+      - ./app/downloads:/app/downloads
+      - ./app/logs:/app/logs
+    environment:
+      - OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    restart: unless-stopped
