@@ -2,13 +2,11 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+# Copia todo el contenido de la carpeta app
 COPY ../app /app
 
-RUN pip install --no-cache-dir -r requirements.txt
-
-ENV FLASK_APP=chatgpt_console.py
-ENV FLASK_RUN_HOST=0.0.0.0
+RUN pip install --no-cache-dir flask flask-cors openai
 
 EXPOSE 8080
 
-CMD ["python", "chatgpt_console.py"]
+CMD ["python", "chat_handler.py"]
