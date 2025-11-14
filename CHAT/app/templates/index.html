@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <title>Andres Personal IA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Highlight.js for colored code blocks -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">IA</div>
+                <div class="logo-text">
+                    <div class="title">Andres Personal IA</div>
+                    <div class="subtitle">NAS Asustor · Private</div>
+                </div>
+            </div>
+
+            <button id="newChatBtn" class="btn primary full">+ Nuevo chat</button>
+
+            <div class="sidebar-section">
+                <label for="projectName">Proyecto actual</label>
+                <input id="projectName" type="text" placeholder="ej. Flowboard, Andon, Autismo"
+                       value="default" />
+            </div>
+
+            <div class="sidebar-section">
+                <div class="section-title">Proyectos guardados</div>
+                <ul id="projectList">
+                    {% for p in projects %}
+                    <li class="project-item" data-project="{{ p }}">{{ p }}</li>
+                    {% else %}
+                    <li class="project-item empty">No hay proyectos aún</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="section-title">Archivos del proyecto</div>
+                <div class="upload-box">
+                    <input type="file" id="fileInput" multiple />
+                    <button id="uploadBtn" class="btn secondary small">Subir</button>
+                </div>
+                <div class="hint">Usa <code>/lista</code> para listar archivos o
+                    <code>/leer nombre.ext</code> para que la IA lea uno.</div>
+                <ul id="fileList" class="file-list"></ul>
+            </div>
+
+            <div class="sidebar-section">
+                <button id="downloadZipBtn" class="btn ghost full">⬇ Exportar ZIP del proyecto</button>
+            </div>
+        </aside>
+
+        <main class="chat-area">
+            <header class="chat-header">
+                <div>
+                    <h1>Chat actual</h1>
+                    <p class="chat-subtitle">Tus datos nunca salen del NAS. Solo se envía el texto necesario a la API de OpenAI.</p>
+                </div>
+                <div class="model-pill">
+                    <span>Modelo:</span>
+                    <span id="modelName">OPENAI_MODEL</span>
+                </div>
+            </header>
+
+            <section id="chatWindow" class="chat-window">
+                <div class="message assistant">
+                    <div class="avatar">IA</div>
+                    <div class="bubble">
+                        <div class="meta">Andres Personal IA · Conectado</div>
+                        <div class="text">
+                            ¡Bienvenido a tu IA privada en el NAS Asustor! 🧠<br />
+                            Escríbeme qué necesitas y trabajaremos por proyectos.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="chat-input">
+                <div class="input-row">
+                    <textarea id="userInput" rows="3" placeholder="Escribe tu mensaje aquí... Usa /lista o /leer archivo.ext para trabajar con tus archivos."></textarea>
+                    <button id="sendBtn" class="btn primary send">Enviar</button>
+                </div>
+                <div class="tips">
+                    <span>💡 Tips:</span>
+                    <span>/lista</span>
+                    <span>/leer nombre.pdf</span>
+                    <span>Describe un proyecto y pide que genere un plan completo.</span>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        hljs.highlightAll();
+
+        const chatWindow = document.getElementById('chatWindow');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const projectNameInput = document.getElementById('projectName');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const fileList = document.getElementById('fileList');
+        const downloadZipBtn = document.getElementById('downloadZipBtn');
+        const projectList = document.getElementById('projectList');
+        const newChatBtn = document.getElementById('newChatBtn');
+
+        function getCurrentProject() {
+            const name = projectNameInput.value.trim();
+            return name || 'default';
+        }
+
+        function scrollToBottom() {
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.innerText = text;
+            return div.innerHTML;
+        }
+
+        function renderWithCodeBlocks(text) {
+            let html = escapeHtml(text);
+
+            const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+            html = html.replace(codeBlockRegex, (match, lang, code) => {
+                const language = lang ? `language-${lang}` : '';
+                const escapedCode = escapeHtml(code);
+                return `<pre><code class="\${language}">\${escapedCode}</code></pre>`;
+            });
+
+            return html;
+        }
+
+        function addMessage(role, text) {
+            const wrapper = document.createElement('div');
+            wrapper.classList.add('message', role);
+
+            const avatar = document.createElement('div');
+            avatar.classList.add('avatar');
+            avatar.textContent = role === 'user' ? 'Tú' : 'IA';
+
+            const bubble = document.createElement('div');
+            bubble.classList.add('bubble');
+
+            const meta = document.createElement('div');
+            meta.classList.add('meta');
+            meta.textContent = role === 'user' ? 'Tú' : 'Andres Personal IA';
+
+            const body = document.createElement('div');
+            body.classList.add('text');
+            body.innerHTML = renderWithCodeBlocks(text);
+
+            bubble.appendChild(meta);
+            bubble.appendChild(body);
+
+            wrapper.appendChild(avatar);
+            wrapper.appendChild(bubble);
+
+            chatWindow.appendChild(wrapper);
+            scrollToBottom();
+
+            chatWindow.querySelectorAll('pre code').forEach(block => {
+                hljs.highlightElement(block);
+            });
+        }
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            const project = getCurrentProject();
+
+            addMessage('user', message);
+            userInput.value = '';
+            userInput.focus();
+
+            addMessage('assistant', 'Pensando...');
+
+            const bubbles = chatWindow.querySelectorAll('.message.assistant .bubble .text');
+            const thinkingBubble = bubbles[bubbles.length - 1];
+
+            try {
+                const res = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message, project })
+                });
+
+                const data = await res.json();
+                thinkingBubble.innerHTML = renderWithCodeBlocks(data.reply || '[Respuesta vacía]');
+                hljs.highlightAll();
+                loadFiles();
+                loadProjects();
+            } catch (err) {
+                thinkingBubble.textContent = 'Error al enviar el mensaje: ' + err;
+            }
+
+            scrollToBottom();
+        }
+
+        async function loadFiles() {
+            const project = getCurrentProject();
+            try {
+                const res = await fetch('/files?project=' + encodeURIComponent(project));
+                const data = await res.json();
+                fileList.innerHTML = '';
+                (data.files || []).forEach(f => {
+                    const li = document.createElement('li');
+                    li.textContent = f.name + ' (' + f.size + ' bytes)';
+                    li.dataset.filename = f.name;
+                    li.addEventListener('click', () => {
+                        userInput.value = '/leer ' + f.name;
+                        userInput.focus();
+                    });
+                    fileList.appendChild(li);
+                });
+            } catch (err) {
+                console.error('Error cargando archivos', err);
+            }
+        }
+
+        async function uploadFiles() {
+            const files = fileInput.files;
+            if (!files || !files.length) return;
+
+            const project = getCurrentProject();
+            const formData = new FormData();
+            formData.append('project', project);
+            for (let i = 0; i < files.length; i++) {
+                formData.append('file', files[i]);
+            }
+
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Subiendo...';
+
+            try {
+                const res = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.error) {
+                    alert(data.error);
+                }
+            } catch (err) {
+                alert('Error subiendo archivo: ' + err);
+            }
+
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = 'Subir';
+            fileInput.value = '';
+            loadFiles();
+        }
+
+        async function downloadZip() {
+            const project = getCurrentProject();
+            const url = '/download_zip?project=' + encodeURIComponent(project);
+            window.open(url, '_blank');
+        }
+
+        function loadProjects() {
+            fetch('/')
+                .then(resp => resp.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newList = doc.querySelectorAll('#projectList .project-item');
+                    projectList.innerHTML = '';
+                    newList.forEach(item => {
+                        const li = document.createElement('li');
+                        li.className = item.className;
+                        li.textContent = item.textContent;
+                        const projectName = item.getAttribute('data-project');
+                        if (projectName) {
+                            li.dataset.project = projectName;
+                            li.addEventListener('click', () => {
+                                projectNameInput.value = projectName;
+                                addMessage('assistant', 'Proyecto cambiado a: ' + projectName);
+                                loadFiles();
+                            });
+                        }
+                        projectList.appendChild(li);
+                    });
+                })
+                .catch(err => console.error('Error recargando proyectos', err));
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        uploadBtn.addEventListener('click', uploadFiles);
+        downloadZipBtn.addEventListener('click', downloadZip);
+        newChatBtn.addEventListener('click', () => {
+            chatWindow.innerHTML = '';
+            addMessage('assistant', 'Nuevo chat iniciado. Indica el proyecto o tema con el que trabajaremos.');
+        });
+
+        window.addEventListener('load', () => {
+            loadFiles();
+        });
+    </script>
+</body>
+</html>
