@@ -2,6 +2,7 @@ version: "3.9"
 
 services:
   iachatbuilder:
+    image: iachatbuilder:latest
     build:
       context: .
       dockerfile: Dock/Dockerfile
