@@ -3,7 +3,7 @@ version: '3.9'
 services:
   ia:
     build:
-      context: ./Dock
+      context: .
       dockerfile: Dockerfile
     container_name: ia
     ports:
