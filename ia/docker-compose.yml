@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+  iachat:
+    build:
+      context: .
+      dockerfile: Dock/Dockerfile
+    container_name: iachat_asustor_builder
+    environment:
+      OPENAI_MODEL: "gpt-4o-mini"
+    volumes:
+      - ./app/uploads:/app/uploads
+    restart: unless-stopped

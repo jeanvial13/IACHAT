@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset='UTF-8'><title>IACHAT ASUSTOR</title>
+<link rel='stylesheet' href='/static/style.css'/>
+</head>
+<body>
+<header>IACHAT ASUSTOR Edition</header>
+<div id='chat-container'>
+  <div id='chat-log'></div>
+  <div id='chat-input-area'>
+    <textarea id='chat-input' placeholder='Escribe...' rows='1'></textarea>
+    <button id='send-btn'>Enviar</button>
+  </div>
+</div>
+<script>
+const input=document.getElementById('chat-input');
+const log=document.getElementById('chat-log');
+document.getElementById('send-btn').onclick=async()=>{
+  const msg=input.value.trim(); if(!msg) return;
+  log.innerHTML+=`<div class="msg user"><pre>${msg}</pre></div>`;
+  input.value="";
+  const r=await fetch("/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:msg})});
+  const data=await r.json();
+  log.innerHTML+=`<div class="msg assistant"><pre>${data.reply||data.error}</pre></div>`;
+};
+</script>
+</body></html>
