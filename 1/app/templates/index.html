@@ -1,22 +1,183 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>ANDRES PERSONAL IA</title>
-    <link rel="stylesheet" href="/static/style.css">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IACHAT ASUSTOR PRO v2</title>
+  <link rel="stylesheet" href="/static/style.css"/>
 </head>
 <body>
-    <h1>ANDRES PERSONAL IA</h1>
+<div class="app">
+  <aside class="sidebar">
+    <h1>IACHAT<br/>ASUSTOR PRO</h1>
+    <button id="new-chat-btn">+ Nuevo chat</button>
 
-    <form action="/chat" method="POST">
-        <input type="text" name="message" placeholder="Escribe aquí..." required>
-        <button type="submit">Enviar</button>
-    </form>
-
-    <div id="response-box">
-        {% if response %}
-            <p>{{ response }}</p>
-        {% endif %}
+    <div class="section">
+      <label for="model-select">Modelo</label>
+      <select id="model-select">
+        <option value="gpt-4o-mini">gpt-4o-mini</option>
+        <option value="gpt-4o">gpt-4o</option>
+      </select>
     </div>
+
+    <div class="section">
+      <label>Adjuntar archivos</label>
+      <input id="file-input" type="file" multiple/>
+      <button id="upload-btn">Subir &amp; resumir</button>
+      <div id="files-status" class="files-status"></div>
+    </div>
+
+    <div class="section small">
+      <p class="hint">
+        • Guarda el historial en esta sesión<br/>
+        • PDFs y TXT se resumen<br/>
+        • Nada de la API key sale del NAS
+      </p>
+    </div>
+  </aside>
+
+  <main class="chat">
+    <header class="chat-header">
+      <div>
+        <strong>Chat actual</strong>
+        <span id="status" class="status-dot">● Conectado</span>
+      </div>
+      <button id="clear-btn">Limpiar chat</button>
+    </header>
+
+    <div id="chat-log" class="chat-log"></div>
+
+    <form id="chat-form" class="chat-input-area">
+      <textarea id="chat-input" placeholder="Escribe tu mensaje aquí..." rows="1"></textarea>
+      <button type="submit" id="send-btn">Enviar</button>
+    </form>
+  </main>
+</div>
+
+<script>
+  const chatLog = document.getElementById("chat-log");
+  const input = document.getElementById("chat-input");
+  const form = document.getElementById("chat-form");
+  const clearBtn = document.getElementById("clear-btn");
+  const newChatBtn = document.getElementById("new-chat-btn");
+  const modelSelect = document.getElementById("model-select");
+  const fileInput = document.getElementById("file-input");
+  const uploadBtn = document.getElementById("upload-btn");
+  const filesStatus = document.getElementById("files-status");
+
+  let history = [];
+  let fileSummaries = [];
+
+  function appendMessage(role, text) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "msg " + role;
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.innerText = text;
+
+    wrapper.appendChild(bubble);
+    chatLog.appendChild(wrapper);
+    chatLog.scrollTop = chatLog.scrollHeight;
+  }
+
+  async function sendMessage(message) {
+    if (!message) return;
+    appendMessage("user", message);
+    history.push({ role: "user", content: message });
+
+    appendMessage("assistant", "Pensando...");
+    const thinkingNode = chatLog.lastChild;
+
+    try {
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message,
+          history,
+          model: modelSelect.value,
+          file_summaries: fileSummaries
+        })
+      });
+
+      const data = await res.json();
+      chatLog.removeChild(thinkingNode);
+
+      if (data.reply) {
+        appendMessage("assistant", data.reply);
+        history.push({ role: "assistant", content: data.reply });
+      } else {
+        appendMessage("assistant", "⚠️ " + (data.error || "Error desconocido"));
+      }
+    } catch (err) {
+      chatLog.removeChild(thinkingNode);
+      appendMessage("assistant", "⚠️ Error de conexión: " + err);
+    }
+  }
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = "";
+    sendMessage(text);
+  });
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      form.dispatchEvent(new Event("submit"));
+    }
+  });
+
+  clearBtn.addEventListener("click", () => {
+    history = [];
+    fileSummaries = [];
+    chatLog.innerHTML = "";
+  });
+
+  newChatBtn.addEventListener("click", () => {
+    history = [];
+    fileSummaries = [];
+    chatLog.innerHTML = "";
+    appendMessage("assistant", "Nuevo chat iniciado. ¿En qué te ayudo?");
+  });
+
+  uploadBtn.addEventListener("click", async () => {
+    const files = fileInput.files;
+    if (!files || !files.length) {
+      filesStatus.innerText = "Selecciona uno o más archivos primero.";
+      return;
+    }
+    filesStatus.innerText = "Subiendo y resumiendo archivos...";
+    const fd = new FormData();
+    for (const f of files) {
+      fd.append("files", f);
+    }
+    try {
+      const res = await fetch("/upload", {
+        method: "POST",
+        body: fd
+      });
+      const data = await res.json();
+      if (data.files) {
+        fileSummaries = data.files;
+        filesStatus.innerText = "Archivos listos. El contexto se usará en tus próximas preguntas.";
+        data.files.forEach(f => {
+          appendMessage("assistant", "Resumen de " + f.filename + ":\n" + f.summary);
+          history.push({ role: "assistant", content: "Resumen de " + f.filename + ":\n" + f.summary });
+        });
+      } else {
+        filesStatus.innerText = "Error: " + (data.error || "No se pudieron procesar los archivos.");
+      }
+    } catch (err) {
+      filesStatus.innerText = "Error subiendo archivos: " + err;
+    }
+  });
+
+  // Mensaje inicial
+  appendMessage("assistant", "¡Bienvenido a IACHAT ASUSTOR PRO v2! ¿En qué te puedo ayudar hoy?");
+</script>
 </body>
 </html>
