@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>ANDRES PERSONAL IA</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+<div class="app-container">
+  <aside class="sidebar">
+    <h1 class="app-title">ANDRES PERSONAL IA</h1>
+    <p class="status-dot">● Conectado</p>
+
+    <section class="block">
+      <h2>MODELO</h2>
+      <select id="model-select">
+        <option value="gpt-4o-mini" selected>gpt-4o-mini</option>
+        <option value="gpt-4.1-mini">gpt-4.1-mini</option>
+      </select>
+    </section>
+
+    <section class="block">
+      <h2>ADJUNTAR ARCHIVOS</h2>
+      <input id="file-input" type="file" multiple />
+      <button id="upload-btn">Subir &amp; resumir</button>
+      <p class="hint">
+        Archivos listos: El contexto se usará en tus próximas preguntas.
+      </p>
+      <ul id="upload-list"></ul>
+    </section>
+
+    <section class="block small-text">
+      <ul>
+        <li>Guarda el historial en esta sesión</li>
+        <li>PDF, TXT y DOCX se resumen</li>
+        <li>Nada de la API key sale del NAS</li>
+      </ul>
+    </section>
+
+    <button id="reset-btn" class="reset-btn">Borrar historial</button>
+  </aside>
+
+  <main class="chat-panel">
+    <div id="chat-window" class="chat-window"></div>
+
+    <div class="input-row">
+      <textarea id="user-input" placeholder="Escribe tu mensaje aquí..."></textarea>
+      <button id="send-btn">Enviar</button>
+    </div>
+  </main>
+</div>
+
+<script>
+const chatWindow = document.getElementById("chat-window");
+const userInput  = document.getElementById("user-input");
+const sendBtn    = document.getElementById("send-btn");
+const modelSel   = document.getElementById("model-select");
+const fileInput  = document.getElementById("file-input");
+const uploadBtn  = document.getElementById("upload-btn");
+const uploadList = document.getElementById("upload-list");
+const resetBtn   = document.getElementById("reset-btn");
+
+function appendMessage(role, text) {
+  const row = document.createElement("div");
+  row.className = "msg " + role;
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+  bubble.textContent = text;
+  row.appendChild(bubble);
+  chatWindow.appendChild(row);
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+async function sendMessage() {
+  const message = userInput.value.trim();
+  if (!message) return;
+  appendMessage("user", message);
+  userInput.value = "";
+  const model = modelSel.value;
+
+  try {
+    const resp = await fetch("/chat", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({message, model}),
+    });
+    const data = await resp.json();
+    if (data.reply) {
+      appendMessage("assistant", data.reply);
+    } else if (data.error) {
+      appendMessage("assistant", "⚠️ " + data.error);
+    }
+  } catch (err) {
+    appendMessage("assistant", "⚠️ Error de red: " + err);
+  }
+}
+
+sendBtn.addEventListener("click", sendMessage);
+userInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+uploadBtn.addEventListener("click", async () => {
+  const files = fileInput.files;
+  if (!files || !files.length) {
+    alert("Selecciona uno o más archivos primero.");
+    return;
+  }
+  const formData = new FormData();
+  for (const f of files) {
+    formData.append("files", f);
+  }
+
+  uploadBtn.disabled = true;
+  uploadBtn.textContent = "Subiendo...";
+  try {
+    const resp = await fetch("/upload", {method: "POST", body: formData});
+    const data = await resp.json();
+    uploadList.innerHTML = "";
+    (data.files || []).forEach(info => {
+      const li = document.createElement("li");
+      li.textContent = info.name + " → " + info.message;
+      uploadList.appendChild(li);
+    });
+    if (data.summaries && data.summaries.length) {
+      appendMessage("assistant",
+        "He leído y resumido tus archivos. Pídeme lo que necesites sobre ellos.");
+    }
+  } catch (err) {
+    alert("Error subiendo archivos: " + err);
+  } finally {
+    uploadBtn.disabled = false;
+    uploadBtn.textContent = "Subir & resumir";
+  }
+});
+
+resetBtn.addEventListener("click", async () => {
+  try {
+    await fetch("/reset", {method: "POST"});
+    chatWindow.innerHTML = "";
+    uploadList.innerHTML = "";
+    appendMessage("assistant", "He borrado el historial de este chat.");
+  } catch (err) {
+    alert("No se pudo borrar el historial: " + err);
+  }
+});
+
+// Mensaje de bienvenida
+appendMessage("assistant", "¡Bienvenido a ANDRES PERSONAL IA! ¿En qué te puedo ayudar hoy?");
+</script>
+</body>
+</html>
