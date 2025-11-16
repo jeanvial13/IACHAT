@@ -469,3 +469,121 @@ select:hover,
   filter: drop-shadow(0 0 8px #00fff0) brightness(1.1);
   transform: translateY(-2px) scale(1.02);
 }
+/* ================================================================
+   CYBERPUNK 2077 — EDGERUNNERS ULTRA MODE V6
+   Full Neon Yellow + Particle Universe + Glitch FX
+   ================================================================ */
+
+/* --- Capa de fog energético --- */
+body::before {
+  content:"";
+  position:fixed;
+  inset:0;
+  background:radial-gradient(circle at 30% 20%, rgba(255,255,0,0.12), transparent 60%),
+              radial-gradient(circle at 80% 70%, rgba(255,255,0,0.08), transparent 60%);
+  pointer-events:none;
+  z-index:2;
+  animation: fogMove 25s ease-in-out infinite;
+}
+
+@keyframes fogMove {
+  0%   { filter:blur(28px); opacity:0.4; }
+  50%  { filter:blur(40px); opacity:0.6; }
+  100% { filter:blur(28px); opacity:0.4; }
+}
+
+/* --- Scanlines y glitch leve global --- */
+body::after {
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:3;
+  background:repeating-linear-gradient(
+      90deg,
+      rgba(255,255,0,0.04) 0px,
+      rgba(255,255,0,0.04) 2px,
+      transparent 4px,
+      transparent 7px
+  );
+  animation: scanSlide 12s linear infinite;
+  opacity:.08;
+}
+
+@keyframes scanSlide {
+  from { transform:translateX(0px); }
+  to   { transform:translateX(-300px); }
+}
+
+/* --- Glow cyberpunk de toda la interfaz --- */
+.sidebar,
+.chat {
+  box-shadow:
+    inset 0 0 50px rgba(255,255,0,0.07),
+    inset 0 0 100px rgba(255,255,0,0.04),
+    0 0 40px rgba(255,255,0,0.06);
+}
+
+/* --- Botones con glitch amarillo --- */
+button,
+.file-upload-btn,
+#upload-btn,
+#clear-btn {
+  position:relative;
+  overflow:hidden;
+}
+
+button::after,
+.file-upload-btn::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg,
+    transparent 0%,
+    rgba(255,255,0,0.25) 50%,
+    transparent 100%
+  );
+  opacity:0;
+  transform:translateX(-100%);
+  transition:0.2s;
+}
+
+button:hover::after,
+.file-upload-btn:hover::after {
+  opacity:1;
+  transform:translateX(100%);
+}
+
+/* --- Hover neón explosivo --- */
+button:hover,
+.file-upload-btn:hover {
+  filter:drop-shadow(0 0 10px yellow) brightness(1.25);
+  transform:translateY(-2px) scale(1.03);
+}
+
+/* --- Partículas neon amarillas --- */
+.particle {
+  position:fixed;
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:yellow;
+  box-shadow:0 0 12px yellow, 0 0 22px rgba(255,255,0,0.7);
+  opacity:0.6;
+  pointer-events:none;
+  z-index:4;
+  animation: floatParticle 8s infinite ease-in-out;
+}
+
+@keyframes floatParticle {
+  0%   { transform:translateY(0) translateX(0) scale(0.9); opacity:0.5; }
+  50%  { transform:translateY(-50px) translateX(25px) scale(1.3); opacity:0.9; }
+  100% { transform:translateY(0) translateX(0) scale(0.9); opacity:0.5; }
+}
+
+/* --- Variaciones aleatorias automáticas --- */
+.particle:nth-child(odd)  { animation-duration:6s; }
+.particle:nth-child(even) { animation-duration:10s; }
+.particle:nth-child(3n)   { animation-duration:12s; }
+.particle:nth-child(5n)   { animation-duration:14s; }
+
