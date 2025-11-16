@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Andres IA</title>
-  <link rel="stylesheet" href="/static/style.css"/>
+  <link rel="stylesheet" href="/static/style.css" />
 </head>
-
 <body>
 <div class="app">
   <aside class="sidebar">
@@ -22,21 +21,16 @@
     </div>
 
     <div class="section">
- <div class="section">
-  <label>Adjuntar archivos</label>
+      <label>Adjuntar archivos</label>
+      <div class="file-upload-wrapper">
+        <button type="button" class="file-upload-btn">📁 Seleccionar archivo</button>
+        <input id="file-input" type="file" multiple />
+      </div>
+      <div id="selected-file-name">Ningún archivo seleccionado</div>
+      <button id="upload-btn">Subir &amp; resumir</button>
+      <div id="files-status" class="files-status"></div>
+    </div>
 
-  <div class="file-upload-wrapper">
-    <button type="button" class="file-upload-btn">📁 Seleccionar archivo</button>
-    <input id="file-input" type="file" multiple />
-  </div>
-
-  <div id="selected-file-name">Ningún archivo seleccionado</div>
-
-  <button id="upload-btn">Subir & resumir</button>
-</div>
-
-
-    <!-- 🔥 Nuevo botón para ver consumo de tokens -->
     <div class="section">
       <a href="https://platform.openai.com/usage" target="_blank" class="token-usage-btn">
         ⚡ Consumo de Tokens OpenAI
@@ -44,16 +38,15 @@
     </div>
 
     <div class="section small">
-      <p class="hint">
-        <div class="quotes">
-  <p>“Hazlo por los que ya no están…”</p>
-  <p>“No necesito suerte. Solo necesito avanzar.”</p>
-  <p>“Si el camino es peligroso, vale la pena.”</p>
-  <p>“No vine a ser uno más. Vine a romper la línea.”</p>
-</div>
-      </p>
+      <div class="quotes">
+        <p>“Hazlo por los que ya no están…”</p>
+        <p>“No necesito suerte. Solo necesito avanzar.”</p>
+        <p>“Si el camino es peligroso, vale la pena.”</p>
+        <p>“No vine a ser uno más. Vine a romper la línea.”</p>
+      </div>
     </div>
   </aside>
+
   <div class="holo-arrow"></div>
 
   <main class="chat">
@@ -74,6 +67,18 @@
   </main>
 </div>
 
+<!-- Partículas neon amarillas -->
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+
 <script>
   const chatLog = document.getElementById("chat-log");
   const input = document.getElementById("chat-input");
@@ -84,6 +89,7 @@
   const fileInput = document.getElementById("file-input");
   const uploadBtn = document.getElementById("upload-btn");
   const filesStatus = document.getElementById("files-status");
+  const fileNameText = document.getElementById("selected-file-name");
 
   let history = [];
   let fileSummaries = [];
@@ -185,8 +191,8 @@
         fileSummaries = data.files;
         filesStatus.innerText = "Archivos listos. El contexto se usará en tus próximas preguntas.";
         data.files.forEach(f => {
-          appendMessage("assistant", "Resumen de " + f.filename + ":\n" + f.summary);
-          history.push({ role: "assistant", content: "Resumen de " + f.filename + ":\n" + f.summary });
+          appendMessage("assistant", "Resumen de " + f.filename + "\n" + f.summary);
+          history.push({ role: "assistant", content: "Resumen de " + f.filename + "\n" + f.summary });
         });
       } else {
         filesStatus.innerText = "Error: " + (data.error || "No se pudieron procesar los archivos.");
@@ -196,41 +202,29 @@
     }
   });
 
-  // Mensaje inicial
+  // Mostrar mensaje de bienvenida
   appendMessage("assistant", "¡Bienvenido, choom… prepárate! Las leyendas no nacen… se ejecutan. Iniciando protocolo Andres.");
 
-  // Mostrar nombre de archivo elegido
-const fileInput2 = document.getElementById("file-input");
-const fileNameText = document.getElementById("selected-file-name");
+  // Mostrar nombre de archivos seleccionados
+  fileInput.addEventListener("change", () => {
+    if (fileInput.files.length === 0) {
+      fileNameText.innerText = "Ningún archivo seleccionado";
+    } else if (fileInput.files.length === 1) {
+      fileNameText.innerText = fileInput.files[0].name;
+    } else {
+      fileNameText.innerText = `${fileInput.files.length} archivos seleccionados`;
+    }
+  });
 
-fileInput2.addEventListener("change", () => {
-  if (fileInput2.files.length === 0) {
-    fileNameText.innerText = "Ningún archivo seleccionado";
-  } else if (fileInput2.files.length === 1) {
-    fileNameText.innerText = fileInput2.files[0].name;
-  } else {
-    fileNameText.innerText = `${fileInput2.files.length} archivos seleccionados`;
-  }
-});
-  <script>
-document.addEventListener("mousemove", (e) => {
+  // Ghost trail FX
+  document.addEventListener("mousemove", (e) => {
     const g = document.createElement("div");
     g.classList.add("ghost");
     g.style.left = e.pageX + "px";
     g.style.top = e.pageY + "px";
     document.body.appendChild(g);
     setTimeout(() => g.remove(), 600);
-});
+  });
 </script>
-
-
-</script>
-  
-
 </body>
-<div class="particle"></div>
-<div class="particle"></div>
-<div class="particle"></div>
-<div class="particle"></div>
-
 </html>
