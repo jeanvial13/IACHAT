@@ -22,13 +22,19 @@
     </div>
 
     <div class="section">
+ <div class="section">
   <label>Adjuntar archivos</label>
 
-  <input id="file-input" type="file" multiple />
+  <div class="file-upload-wrapper">
+    <button type="button" class="file-upload-btn">📁 Seleccionar archivo</button>
+    <input id="file-input" type="file" multiple />
+  </div>
+
+  <div id="selected-file-name">Ningún archivo seleccionado</div>
 
   <button id="upload-btn">Subir & resumir</button>
-  <div id="files-status" class="files-status"></div>
 </div>
+
 
     <!-- 🔥 Nuevo botón para ver consumo de tokens -->
     <div class="section">
@@ -192,7 +198,23 @@
 
   // Mensaje inicial
   appendMessage("assistant", "¡Bienvenido, choom… prepárate! Las leyendas no nacen… se ejecutan. Iniciando protocolo Andres.");
+
+  // Mostrar nombre de archivo elegido
+const fileInput2 = document.getElementById("file-input");
+const fileNameText = document.getElementById("selected-file-name");
+
+fileInput2.addEventListener("change", () => {
+  if (fileInput2.files.length === 0) {
+    fileNameText.innerText = "Ningún archivo seleccionado";
+  } else if (fileInput2.files.length === 1) {
+    fileNameText.innerText = fileInput2.files[0].name;
+  } else {
+    fileNameText.innerText = `${fileInput2.files.length} archivos seleccionados`;
+  }
+});
+
 </script>
+  
 
 </body>
 </html>
