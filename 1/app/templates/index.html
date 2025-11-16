@@ -1,14 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-<title>Andres Personal IA</title>
+    <meta charset="UTF-8">
+    <title>ANDRES PERSONAL IA</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
-<body style="background:black;color:lime;font-family:Arial;">
-<h2>ANDRES PERSONAL IA</h2>
-<form method="POST">
-<input name="msg" style="width:300px;">
-<button type="submit">Enviar</button>
-</form>
-<p>{{ reply }}</p>
+<body>
+    <h1>ANDRES PERSONAL IA</h1>
+
+    <form action="/chat" method="POST">
+        <input type="text" name="message" placeholder="Escribe aquí..." required>
+        <button type="submit">Enviar</button>
+    </form>
+
+    <div id="response-box">
+        {% if response %}
+            <p>{{ response }}</p>
+        {% endif %}
+    </div>
 </body>
 </html>
