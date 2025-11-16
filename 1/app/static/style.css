@@ -1,6 +1,8 @@
 /* =========================================================
-   ANDRES IA - TEMA CYBERPUNK NETRUNNER
+   ANDRES IA - CYBERPUNK NETRUNNER (VERSIÓN ESTABLE + FX)
    ========================================================= */
+
+/* ------------------- RESET BÁSICO ------------------- */
 
 * {
   box-sizing: border-box;
@@ -12,16 +14,91 @@ body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: #02040a;
   color: #f5f5f5;
+  overflow-x: hidden;
+  position: relative;
 }
 
-/* ======================= LAYOUT GENERAL ======================= */
+/* =========================================================
+   FX GLOBAL – HOLOGRAMA + SCANLINES (SUAVE)
+   ========================================================= */
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(0, 255, 200, 0.06), transparent 55%),
+    radial-gradient(circle at 90% 100%, rgba(255, 255, 0, 0.06), transparent 55%),
+    url("https://www.transparenttextures.com/patterns/asfalt-light.png");
+  opacity: 0.22;
+  mix-blend-mode: screen;
+  z-index: 1;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(0, 255, 240, 0.05) 0px,
+    rgba(0, 255, 240, 0.05) 1px,
+    transparent 3px,
+    transparent 7px
+  );
+  opacity: 0.08;
+  animation: scan-move 18s linear infinite;
+  z-index: 1;
+}
+
+@keyframes scan-move {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-220px); }
+}
+
+/* =========================================================
+   LAYOUT GENERAL
+   ========================================================= */
 
 .app {
   display: flex;
   height: 100vh;
+  position: relative;
+  overflow: hidden;
+  z-index: 2;
 }
 
-/* ======================= SIDEBAR ======================= */
+.app::before {
+  content: "";
+  position: absolute;
+  left: 280px;
+  top: 0;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 255, 255, 0) 0%,
+    rgba(0, 255, 255, 0.9) 50%,
+    rgba(0, 255, 255, 0) 100%
+  );
+  box-shadow: 0 0 18px rgba(0, 255, 255, 0.8);
+  opacity: 0.65;
+  pointer-events: none;
+  animation: energyFlow 4.5s ease-in-out infinite;
+  z-index: 5;
+}
+
+@keyframes energyFlow {
+  0%   { transform: translateY(-40px); opacity: 0.4; }
+  50%  { transform: translateY(40px);  opacity: 0.9; }
+  100% { transform: translateY(-40px); opacity: 0.4; }
+}
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
 
 .sidebar {
   width: 280px;
@@ -31,28 +108,27 @@ body {
   border-right: 1px solid #1f2937;
   display: flex;
   flex-direction: column;
-  gap: 22px;              /* separación entre bloques */
+  gap: 22px;
   position: relative;
   z-index: 10;
   box-shadow: inset 0 0 18px #00eaff33;
 }
 
-/* borde neón animado en el lateral derecho */
 .sidebar::after {
   content: "";
   position: absolute;
   right: -2px;
-  top: -20px;
+  top: -30px;
   width: 4px;
-  height: 140%;
+  height: 150%;
   background: linear-gradient(180deg, transparent, #00eaff, transparent);
   filter: drop-shadow(0 0 10px #00eaff);
   animation: sidebar-neon 4s linear infinite;
 }
 
 @keyframes sidebar-neon {
-  0% { transform: translateY(-100%); opacity: 0.5; }
-  100% { transform: translateY(100%); opacity: 1; }
+  0%   { transform: translateY(-100%); opacity: 0.4; }
+  100% { transform: translateY(100%);  opacity: 1;   }
 }
 
 .sidebar h1 {
@@ -63,7 +139,29 @@ body {
   text-shadow: 0 0 10px #22c55e55;
 }
 
-/* ======================= CONTROLES SIDEBAR ======================= */
+/* =========================================================
+   CONTENIDOS SIDEBAR
+   ========================================================= */
+
+.section {
+  margin-top: 4px;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.section.small {
+  margin-top: auto;
+}
+
+.section label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: #9ca3af;
+}
 
 .sidebar button {
   background: #22c55e;
@@ -84,23 +182,6 @@ body {
   box-shadow: 0 0 16px #22c55eaa;
 }
 
-.section {
-  margin-top: 4px;
-  font-size: 13px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 4px;
-}
-
-.section label {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  color: #9ca3af;
-}
-
-/* SELECT DE MODELO */
 #model-select {
   border-radius: 999px;
   border: 1px solid #374151;
@@ -111,33 +192,96 @@ body {
   box-shadow: inset 0 0 10px #00eaff22;
 }
 
-/* INPUT FILE - CHOOSE FILES */
-.section input[type="file"] {
-  display: block;
+.holo-arrow {
+  position: absolute;
+  left: 280px;
+  top: 50%;
+  width: 24px;
+  height: 24px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px solid #00eaff;
+  box-shadow: 0 0 12px #00eaffaa;
+  background: radial-gradient(circle at 30% 30%, #00eaff, transparent 60%);
+  z-index: 6;
+  pointer-events: none;
+}
+
+.holo-arrow::before {
+  content: "";
+  position: absolute;
+  left: 45%;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid #00eaff;
+  border-right: 2px solid #00eaff;
+  transform: translate(-50%, -50%) rotate(180deg);
+}
+
+.holo-arrow::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  border: 1px dashed rgba(0, 234, 255, 0.5);
+  animation: arrowPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes arrowPulse {
+  0%   { opacity: 0.3; transform: scale(1); }
+  50%  { opacity: 0.9; transform: scale(1.12); }
+  100% { opacity: 0.3; transform: scale(1); }
+}
+
+/* =========================================================
+   FILE UPLOAD
+   ========================================================= */
+
+.file-upload-wrapper {
+  position: relative;
+  display: inline-block;
   width: 100%;
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: 2px solid #00eaff88;
-  background: #041826;
-  color: #d1f4ff;
-  font-size: 13px;
+}
+
+#file-input {
+  opacity: 0;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
   cursor: pointer;
-  transition: 0.2s ease;
-  box-shadow: inset 0 0 10px #00eaff55;
 }
 
-.section input[type="file"]:hover {
-  background: #062739;
-  border-color: #00eaff;
-  box-shadow: inset 0 0 14px #00eaffaa;
+.file-upload-btn {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: rgba(0, 255, 200, 0.05);
+  border: 2px solid #00ffd0;
+  color: #00ffd0;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: center;
+  transition: 0.15s ease-in-out;
+  box-shadow: 0 0 8px #00ffd0aa;
 }
 
-/* BOTÓN SUBIR & RESUMIR (usa estilo general de sidebar button) */
-#upload-btn {
+.file-upload-btn:hover {
+  background: rgba(0, 255, 200, 0.12);
+  box-shadow: 0 0 14px #00ffd0;
+  transform: translateY(-2px);
+}
+
+#selected-file-name {
   margin-top: 6px;
+  font-size: 12px;
+  color: #aefbff;
+  text-shadow: 0 0 6px #00eaff;
 }
 
-/* TEXTO INFO (si lo llegas a usar de nuevo) */
 .hint {
   font-size: 12px;
   color: #9ca3af;
@@ -149,7 +293,6 @@ body {
   min-height: 16px;
 }
 
-/* BOTÓN CONSUMO DE TOKENS OPENAI */
 .token-usage-btn {
   display: block;
   padding: 12px 14px;
@@ -173,7 +316,6 @@ body {
   transform: translateY(-2px);
 }
 
-/* BLOQUE DE FRASES MOTIVACIONALES */
 .quotes {
   padding: 14px 12px;
   font-size: 13px;
@@ -193,16 +335,29 @@ body {
   margin-bottom: 0;
 }
 
-/* ======================= CHAT AREA ======================= */
+/* =========================================================
+   CHAT AREA
+   ========================================================= */
 
 .chat {
   flex: 1;
   display: flex;
   flex-direction: column;
   background: radial-gradient(circle at top, #020617 0, #02040a 55%, #000 100%);
+  position: relative;
+  z-index: 3;
+  box-shadow:
+    inset 0 0 40px rgba(0, 255, 180, 0.04),
+    inset 0 0 80px rgba(0, 255, 255, 0.03);
+  animation: chatBreath 10s ease-in-out infinite;
 }
 
-/* HEADER DEL CHAT */
+@keyframes chatBreath {
+  0%   { box-shadow: inset 0 0 35px rgba(0,255,200,0.03); }
+  50%  { box-shadow: inset 0 0 60px rgba(0,255,255,0.08); }
+  100% { box-shadow: inset 0 0 35px rgba(0,255,200,0.03); }
+}
+
 .chat-header {
   padding: 10px 16px;
   border-bottom: 1px solid #111827;
@@ -222,7 +377,6 @@ body {
   margin-left: 4px;
 }
 
-/* BOTÓN LIMPIAR CHAT */
 #clear-btn {
   background: #330000;
   border-radius: 999px;
@@ -240,17 +394,16 @@ body {
   box-shadow: 0 0 16px #ff0033aa;
 }
 
-/* ZONA DE MENSAJES */
 .chat-log {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-/* MENSAJES */
 .msg {
   display: flex;
 }
@@ -272,7 +425,6 @@ body {
   line-height: 1.35;
 }
 
-/* BURBUJA USER */
 .msg.user .bubble {
   background: #22c55e;
   color: #022c16;
@@ -280,7 +432,6 @@ body {
   box-shadow: 0 0 10px #22c55e66;
 }
 
-/* BURBUJA ASSISTANT (semi holográfica) */
 .msg.assistant .bubble {
   background: #020617;
   border: 1px solid #1f2937;
@@ -289,7 +440,21 @@ body {
   box-shadow: 0 0 10px #00eaff33;
 }
 
-/* ======================= INPUT DE CHAT ======================= */
+.msg.assistant .bubble,
+.msg.user .bubble {
+  position: relative;
+  animation: lucyGlow 3.5s ease-in-out infinite;
+}
+
+@keyframes lucyGlow {
+  0%   { box-shadow: 0 0 6px #00eaff40, 0 0 14px #0000; }
+  50%  { box-shadow: 0 0 12px #00eaff90, 0 0 24px #00eaff40; }
+  100% { box-shadow: 0 0 6px #00eaff40, 0 0 14px #0000; }
+}
+
+/* =========================================================
+   INPUT CHAT
+   ========================================================= */
 
 .chat-input-area {
   display: flex;
@@ -310,9 +475,25 @@ body {
   max-height: 160px;
   min-height: 40px;
   box-shadow: inset 0 0 8px #00eaff22;
+  transition: 0.15s;
 }
 
-/* BOTÓN ENVIAR (ya usa estilos globales de botones, pero lo afinamos) */
+.chat-input-area textarea:focus {
+  outline: none;
+  border-color: #00ffd5;
+  box-shadow:
+    0 0 0 1px #00ffd5,
+    0 0 14px #00ffd5aa,
+    inset 0 0 8px #00ffd522;
+  animation: typing-glitch 0.3s steps(2) infinite;
+}
+
+@keyframes typing-glitch {
+  0%   { text-shadow: 1px 0 #00ffe1, -1px 0 #ffffff; }
+  50%  { text-shadow: -1px 0 #00ffe1, 1px 0 #ffffff; }
+  100% { text-shadow: 1px 0 #00ffe1, -1px 0 #ffffff; }
+}
+
 .chat-input-area button {
   border: none;
   border-radius: 999px;
@@ -322,14 +503,63 @@ body {
   padding: 0 18px;
   font-size: 14px;
   cursor: pointer;
+  box-shadow: 0 0 10px #22c55e77;
+  transition: 0.15s;
 }
 
 .chat-input-area button:hover {
   filter: brightness(1.05);
-  box-shadow: 0 0 12px #22c55e88;
+  box-shadow: 0 0 16px #22c55eff;
+  transform: translateY(-2px);
 }
 
-/* ======================= RESPONSIVE ======================= */
+/* =========================================================
+   FX AVANZADO – PARTÍCULAS + GHOST
+   ========================================================= */
+
+.particle {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: yellow;
+  box-shadow: 0 0 14px yellow, 0 0 28px rgba(255,255,0,0.9);
+  opacity: 0.8;
+  pointer-events: none;
+  animation: floatParticle 10s infinite ease-in-out;
+  z-index: 2;
+}
+
+@keyframes floatParticle {
+  0%   { transform: translateY(0) translateX(0); opacity: .6; }
+  50%  { transform: translateY(-40px) translateX(25px); opacity: 1; }
+  100% { transform: translateY(0) translateX(0); opacity: .6; }
+}
+
+.particle:nth-child(3n) { animation-duration: 13s; }
+.particle:nth-child(5n) { animation-duration: 16s; }
+.particle:nth-child(7n) { animation-duration: 20s; }
+
+.ghost {
+  position: fixed;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: rgba(0,255,255,0.9);
+  box-shadow: 0 0 15px #00eeff, 0 0 30px #00eeff;
+  animation: ghostFade 0.6s linear forwards;
+  z-index: 9999;
+}
+
+@keyframes ghostFade {
+  from { transform: scale(1);   opacity: 1; }
+  to   { transform: scale(2.4); opacity: 0; }
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
 
 @media (max-width: 780px) {
   .app {
@@ -341,7 +571,7 @@ body {
     flex-direction: row;
     overflow-x: auto;
     gap: 12px;
-    align-items: center;
+    align-items: flex-start;
   }
 
   .quotes {
