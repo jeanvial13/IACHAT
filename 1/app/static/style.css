@@ -639,5 +639,61 @@ body::after,
   50% { transform:translateX(-1px) skewX(-3deg); opacity:0.9; }
   100% { transform:translateX(1px) skewX(3deg); opacity:1; }
 }
+/* ========================================================= */
+/*   🔥 1) SEPARAR TODOS LOS ELEMENTOS DE LA BARRA LATERAL    */
+/* ========================================================= */
+
+.sidebar {
+  display:flex;
+  flex-direction:column;
+  gap:26px !important;       /* separación GENERAL entre bloques */
+  padding-top:20px !important;
+}
+
+/* separación entre título y botón */
+.sidebar h1 {
+  margin-bottom:10px !important;
+}
+
+/* separación entre secciones */
+.section {
+  margin-bottom:20px !important;
+  padding-bottom:4px;
+}
+
+/* separar botones individuales */
+.sidebar button,
+#model-select,
+#file-input,
+#upload-btn,
+.token-usage-btn,
+.quotes {
+  margin-bottom:16px !important;
+}
+
+/* Para que los bloques no queden demasiado juntos */
+.sidebar .quotes {
+  margin-top:10px !important;
+}
+
+
+/* ========================================================= */
+/*   🔥 2) QUITAR EFECTO GRIS DESLIZANTE                        */
+/* ========================================================= */
+
+/* Esto elimina el overlay gris animado */
+.chat::before {
+  display:none !important;
+}
+
+/* Esto remueve el degradado gris del fondo principal */
+.chat {
+  background:radial-gradient(circle at top, #0a1222 0%, #020617 40%, #000 100%) !important;
+}
+
+/* Esto remueve cualquier animación adicional */
+body::after {
+  display:none !important;
+}
 
 
