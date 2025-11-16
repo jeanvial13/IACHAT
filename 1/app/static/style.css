@@ -548,5 +548,96 @@ body::after,
   border-left:2px solid #00eaff;
   background:rgba(0,20,40,0.4);
   backdrop
+/* ========================================================= */
+/*       🔥 1) FLECHA HOLOGRAFICA CYBERPUNK                   */
+/* ========================================================= */
+
+.holo-arrow {
+  position:absolute;
+  left:270px;     /* justo al borde de la sidebar */
+  top:50%;
+  transform:translateY(-50%);
+  width:0;
+  height:0;
+  border-top:18px solid transparent;
+  border-bottom:18px solid transparent;
+  border-left:22px solid #00eaff;
+  filter:drop-shadow(0 0 8px #00eaffaa);
+  animation:arrowPulse 2s infinite ease-in-out;
+  cursor:pointer;
+  z-index:999;
+}
+
+@keyframes arrowPulse {
+  0% { filter:drop-shadow(0 0 6px #00eaff88); transform:translateY(-50%) scale(1); }
+  50% { filter:drop-shadow(0 0 14px #00eaffdd); transform:translateY(-50%) scale(1.10); }
+  100% { filter:drop-shadow(0 0 6px #00eaff88); transform:translateY(-50%) scale(1); }
+}
+
+/* ========================================================= */
+/*       🔥 2) SEPARACIÓN DE ELEMENTOS EN SIDEBAR             */
+/* ========================================================= */
+
+.sidebar {
+  gap:22px !important; /* más separación general */
+}
+
+.sidebar .section {
+  margin-top:10px !important;
+  padding-bottom:4px;
+}
+
+.sidebar h1 {
+  margin-bottom:12px;
+}
+
+.sidebar button,
+#model-select,
+#file-input,
+#upload-btn,
+.token-usage-btn,
+.quotes {
+  margin-bottom:12px !important;
+}
+
+/* ========================================================= */
+/*       🔥 3) BOTÓN NATIVE FILE INPUT — NETRUNNER PRO        */
+/* ========================================================= */
+
+.section input[type="file"] {
+  display:block !important;
+  width:100%;
+  padding:10px 12px;
+  border-radius:10px;
+  border:2px solid #00eaff77;
+  background:#04121c;
+  color:#8be8ff;
+  font-size:13px;
+  cursor:pointer;
+  outline:none;
+  transition:0.25s ease;
+  box-shadow:
+    0 0 10px #00eaff55 inset,
+    0 0 8px #00eaff55;
+}
+
+/* Hover */
+.section input[type="file"]:hover {
+  background:#06283c;
+  border-color:#00eaff;
+  box-shadow:0 0 16px #00eaffaa inset, 0 0 14px #00eaffaa;
+  transform:translateY(-1px);
+}
+
+/* Glitch suave */
+.section input[type="file"]:active {
+  animation:netrunner-glitch 0.25s steps(2, end);
+}
+
+@keyframes netrunner-glitch {
+  0% { transform:translateX(0); opacity:1; }
+  50% { transform:translateX(-1px) skewX(-3deg); opacity:0.9; }
+  100% { transform:translateX(1px) skewX(3deg); opacity:1; }
+}
 
 
