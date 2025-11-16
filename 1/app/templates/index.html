@@ -212,6 +212,17 @@ fileInput2.addEventListener("change", () => {
     fileNameText.innerText = `${fileInput2.files.length} archivos seleccionados`;
   }
 });
+  <script>
+document.addEventListener("mousemove", (e) => {
+    const g = document.createElement("div");
+    g.classList.add("ghost");
+    g.style.left = e.pageX + "px";
+    g.style.top = e.pageY + "px";
+    document.body.appendChild(g);
+    setTimeout(() => g.remove(), 600);
+});
+</script>
+
 
 </script>
   
