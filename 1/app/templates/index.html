@@ -6,6 +6,7 @@
   <title>Andres IA</title>
   <link rel="stylesheet" href="/static/style.css"/>
 </head>
+
 <body>
 <div class="app">
   <aside class="sidebar">
@@ -25,6 +26,13 @@
       <input id="file-input" type="file" multiple/>
       <button id="upload-btn">Subir &amp; resumir</button>
       <div id="files-status" class="files-status"></div>
+    </div>
+
+    <!-- 🔥 Nuevo botón para ver consumo de tokens -->
+    <div class="section">
+      <a href="https://platform.openai.com/usage" target="_blank" class="token-usage-btn">
+        ⚡ Consumo de Tokens OpenAI
+      </a>
     </div>
 
     <div class="section small">
@@ -179,5 +187,6 @@
   // Mensaje inicial
   appendMessage("assistant", "¡Bienvenido, choom… prepárate! Las leyendas no nacen… se ejecutan. Iniciando protocolo Andres.");
 </script>
+
 </body>
 </html>
