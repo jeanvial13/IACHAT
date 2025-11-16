@@ -63,6 +63,8 @@ body {
   transition:0.15s all;
   font-size:14px;
   box-shadow:0 0 10px #22c55e55;
+  position:relative;
+  overflow:hidden;
 }
 
 .sidebar button:hover,
@@ -97,21 +99,23 @@ body {
 
 /* Caja estilizada */
 .custom-file-upload {
-  background:#111827;
+  background:#0d1b2a;
+  border:1px solid #00eaff55;
+  padding:10px 14px;
   border-radius:12px;
-  border:1px solid #374151;
-  padding:8px 12px;
-  color:#e5e7eb;
+  color:#a8eaff;
   font-size:13px;
   cursor:pointer;
   text-align:center;
+  margin-bottom:6px;
+  box-shadow:0 0 12px #00eaff33 inset;
   transition:0.25s ease;
-  box-shadow:0 0 8px #00eaff22 inset;
 }
 
 .custom-file-upload:hover {
-  background:#1f2937;
-  box-shadow:0 0 12px #00eaff66 inset;
+  background:#112b3d;
+  border-color:#00eaff;
+  box-shadow:0 0 18px #00eaff88 inset;
   transform:translateY(-2px);
 }
 
@@ -156,10 +160,14 @@ body {
 }
 
 .msg { display:flex; }
+
 .msg.user { justify-content:flex-end; }
 .msg.assistant { justify-content:flex-start; }
 
-/* BURBUJAS */
+/* ========================================================= */
+/*               BURBUJAS DE CHAT HOLOGRAFICAS               */
+/* ========================================================= */
+
 .bubble {
   max-width:70%;
   padding:10px 12px;
@@ -167,6 +175,7 @@ body {
   font-size:14px;
   white-space:pre-wrap;
   line-height:1.35;
+  position:relative;
 }
 
 .msg.user .bubble {
@@ -176,12 +185,31 @@ body {
   box-shadow:0 0 10px #22c55e66;
 }
 
+/* HOLOGRAMA 3D */
 .msg.assistant .bubble {
-  background:#020617;
-  border:1px solid #1f2937;
+  background:rgba(3,15,30,0.6);
+  backdrop-filter:blur(6px);
+  border:1px solid #00eaff33;
   color:#e5e7eb;
   border-bottom-left-radius:4px;
-  box-shadow:0 0 10px #00eaff22;
+  box-shadow:
+    0 0 15px #00eaff44,
+    inset 0 0 10px #00557766;
+}
+
+.msg.assistant .bubble::after {
+  content:"";
+  position:absolute;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:linear-gradient(120deg, transparent 0%, rgba(0,255,255,0.15) 50%, transparent 100%);
+  animation:holo-scan 3s infinite;
+  pointer-events:none;
+}
+
+@keyframes holo-scan {
+  0% { transform:translateX(-100%); }
+  100% { transform:translateX(100%); }
 }
 
 /* ========================================================= */
@@ -236,7 +264,6 @@ body {
   100% { box-shadow:0 0 8px #00e1ff55; }
 }
 
-/* Efecto glitch RGB */
 .token-usage-btn::before,
 .token-usage-btn::after {
   content:attr(data-text);
@@ -257,7 +284,7 @@ body {
 .token-usage-btn:hover::before,
 .token-usage-btn:hover::after {
   animation:text-glitch 0.12s infinite alternate;
-  opacity:0.7;
+  opacity:0.8;
 }
 
 @keyframes text-glitch {
@@ -266,7 +293,7 @@ body {
 }
 
 /* ========================================================= */
-/*                 EFECTOS DE FONDO CYBERPUNK                */
+/*                EFECTOS DE FONDO ULTRA CYBERPUNK           */
 /* ========================================================= */
 
 /* Partículas neon */
@@ -290,40 +317,22 @@ body::before {
   100% { opacity:0.55; }
 }
 
-/* Líneas HUD */
+/* Triangulación animada */
 body::after {
   content:"";
   position:fixed;
   inset:0;
-  background-image:linear-gradient(transparent 97%,rgba(0,255,255,0.07) 100%);
-  background-size:100% 3px;
-  opacity:0.15;
-  animation:hud-lines 1.8s linear infinite;
+  background-image:
+    repeating-linear-gradient(60deg,rgba(0,255,255,0.05) 0,transparent 60px),
+    repeating-linear-gradient(120deg,rgba(255,0,255,0.05) 0,transparent 60px);
+  animation: triangulo-move 12s linear infinite;
   pointer-events:none;
   z-index:0;
 }
 
-@keyframes hud-lines {
-  0% { background-position-y:0; }
-  100% { background-position-y:100%; }
-}
-
-/* Scan CRT */
-.chat::before {
-  content:"";
-  position:absolute;
-  left:0; top:0;
-  width:100%; height:100%;
-  pointer-events:none;
-  background:linear-gradient(transparent,rgba(255,255,255,0.06),transparent);
-  animation:crt-scan 4s linear infinite;
-  opacity:0.2;
-  z-index:1;
-}
-
-@keyframes crt-scan {
-  0% { transform:translateY(-100%); }
-  100% { transform:translateY(100%); }
+@keyframes triangulo-move {
+  0% { background-position:0 0; }
+  100% { background-position:300px 600px; }
 }
 
 /* Estático digital */
@@ -337,7 +346,7 @@ body::after {
   mix-blend-mode:overlay;
   pointer-events:none;
   animation:static-noise 0.25s infinite;
-  opacity:0.07;
+  opacity:0.06;
   z-index:1;
 }
 
@@ -345,6 +354,82 @@ body::after {
   0% { opacity:0.02; }
   50% { opacity:0.08; }
   100% { opacity:0.02; }
+}
+
+/* Scan CRT */
+.chat::before {
+  content:"";
+  position:absolute;
+  left:0; top:0;
+  width:100%; height:100%;
+  pointer-events:none;
+  background:linear-gradient(transparent,rgba(255,255,255,0.06),transparent);
+  animation:crt-scan 4s linear infinite;
+  opacity:0.15;
+  z-index:1;
+}
+
+@keyframes crt-scan {
+  0% { transform:translateY(-100%); }
+  100% { transform:translateY(100%); }
+}
+
+/* ========================================================= */
+/*                    EFECTOS EXTRA PLUS                     */
+/* ========================================================= */
+
+/* Neon flow */
+button::after,
+.token-usage-btn::after {
+  content:"";
+  position:absolute;
+  top:0; left:-200%;
+  width:200%; height:100%;
+  background:linear-gradient(120deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: neon-flow 3s infinite;
+}
+
+@keyframes neon-flow {
+  0% { left:-200%; }
+  100% { left:200%; }
+}
+
+/* RGB SHIFT GLOBAL (hover) */
+body:hover {
+  text-shadow:
+    1px 0px 1px #ff0088,
+    -1px 0px 1px #00eaff;
+}
+
+/* Vortex al limpiar */
+#clear-btn:active {
+  animation: vortex 0.35s ease-out;
+}
+
+@keyframes vortex {
+  0% { filter: blur(0px) brightness(1); transform: scale(1); }
+  50% { filter: blur(4px) brightness(1.4); transform: scale(1.3) rotate(10deg); }
+  100% { filter: blur(0px) brightness(1); transform: scale(1); }
+}
+
+/* ========================================================= */
+/*                 CURSOR CYBERPUNK NETRUNNER                */
+/* ========================================================= */
+
+body {
+  cursor:url('data:image/svg+xml;utf8,\
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32">\
+<polygon points="0,0 32,16 0,32" fill="%2300eaff"/>\
+</svg>') 0 0, auto;
+}
+
+button:hover,
+a:hover,
+.custom-file-upload:hover {
+  cursor:url('data:image/svg+xml;utf8,\
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32">\
+<polygon points="0,0 32,16 0,32" fill="%23ff00ff"/>\
+</svg>') 0 0, auto;
 }
 
 /* ========================================================= */
