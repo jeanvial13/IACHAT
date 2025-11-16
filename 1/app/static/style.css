@@ -447,3 +447,23 @@ a:hover,
   }
   .section.small { margin-top:0; }
 }
+/* ESTILO PARA EL BOTÓN NATIVO "Choose Files" */
+.section input[type="file"] {
+  display:block !important;
+  background:#111827;
+  padding:8px;
+  border-radius:12px;
+  border:1px solid #374151;
+  color:#e5e7eb;
+  font-size:13px;
+  cursor:pointer;
+  box-shadow:0 0 10px #00eaff22 inset;
+  transition:0.25s ease;
+}
+
+.section input[type="file"]:hover {
+  background:#1f2937;
+  border-color:#00eaff;
+  box-shadow:0 0 16px #00eaff66 inset;
+}
+
