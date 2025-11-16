@@ -466,4 +466,87 @@ a:hover,
   border-color:#00eaff;
   box-shadow:0 0 16px #00eaff66 inset;
 }
+/* ========================================================= */
+/*       1) BOTÓN "Choose Files" — NETRUNNER EDITION          */
+/* ========================================================= */
+
+.section input[type="file"] {
+  display:block !important;
+  padding:10px;
+  width:100%;
+  border-radius:10px;
+  border:1px solid #00eaff80;
+  background:#03131d;
+  color:#7fdcff;
+  font-size:13px;
+  cursor:pointer;
+  transition:0.25s ease;
+  box-shadow:0 0 10px #00eaff55 inset;
+}
+
+.section input[type="file"]:hover {
+  background:#052638;
+  box-shadow:0 0 20px #00eaffaa inset, 0 0 10px #00eaffaa;
+  border-color:#00eaff;
+}
+
+/* Glitch ligero al hacer hover */
+.section input[type="file"]:hover {
+  animation:choom-glitch 0.25s steps(2, end) infinite;
+}
+
+@keyframes choom-glitch {
+  0% { transform:translateX(0); opacity:1; }
+  50% { transform:translateX(1px) skewX(2deg); opacity:0.9; }
+  100% { transform:translateX(-1px) skewX(-2deg); opacity:1; }
+}
+
+/* ========================================================= */
+/*       2) BOTÓN "Limpiar chat" — EDGERUNNERS EDITION        */
+/* ========================================================= */
+
+#clear-btn {
+  background:#300000 !important;
+  border:1px solid #ff0033 !important;
+  color:#ffccd0 !important;
+  box-shadow:0 0 10px #ff002288, inset 0 0 10px #550000aa !important;
+  transition:0.2s ease !important;
+}
+
+#clear-btn:hover {
+  background:#ff0033 !important;
+  color:black !important;
+  box-shadow:0 0 20px #ff0033aa, 0 0 30px #ff004488 !important;
+  animation:clear-glitch 0.25s steps(2, end) infinite;
+}
+
+@keyframes clear-glitch {
+  0% { transform:translateY(0); }
+  50% { transform:translateY(-1px) skewX(3deg); }
+  100% { transform:translateY(0); }
+}
+
+/* ========================================================= */
+/*       3) ELIMINAR EFECTO GRIS QUE SE DESPLAZA              */
+/* ========================================================= */
+
+body::after,
+.chat::before {
+  display:none !important;
+}
+
+/* ========================================================= */
+/*       4) SEPARAR FRASES — ESTILO NETRUNNER HOLOGRAMA       */
+/* ========================================================= */
+
+.sidebar .quotes {
+  margin-top:10px;
+  padding:12px;
+  font-size:13px;
+  line-height:1.4;
+  color:#d5e9ff;
+  border-left:2px solid #00eaff;
+  background:rgba(0,20,40,0.4);
+  backdrop
+
 
