@@ -1,271 +1,588 @@
-/* =====================================================================
-   CYBERPUNK 2077 — LUCY MODE + CYBERPSYCHO MODE + ULTRA VISUAL PACK V12
-   ===================================================================== */
+/* =========================================================
+   ANDRES IA - TEMA CYBERPUNK NETRUNNER
+   ========================================================= */
 
-/* ------------------------------------------
-   FIX GENERAL: evitar scrollbar horizontal
-------------------------------------------- */
-
-html, body {
-    overflow-x: hidden !important;
-    width: 100%;
-    margin: 0;
-    padding: 0;
+* {
+  box-sizing: border-box;
 }
-
-/* ------------------------------------------
-   BASE VISUALS – FOG, SCANLINES, COLOR LAYERS
-------------------------------------------- */
 
 body {
-    background: #02040a;
-    color: #f5f5f5;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    position: relative;
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #02040a;
+  color: #f5f5f5;
 }
 
-/* Fog energético */
+/* ======================= LAYOUT GENERAL ======================= */
+
+.app {
+  display: flex;
+  height: 100vh;
+}
+
+/* ======================= SIDEBAR ======================= */
+
+.sidebar {
+  width: 280px;
+  background: radial-gradient(circle at top, #111827 0, #020617 55%, #000 100%);
+  color: #e5e7eb;
+  padding: 20px;
+  border-right: 1px solid #1f2937;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;              /* separación entre bloques */
+  position: relative;
+  z-index: 10;
+  box-shadow: inset 0 0 18px #00eaff33;
+}
+
+/* borde neón animado en el lateral derecho */
+.sidebar::after {
+  content: "";
+  position: absolute;
+  right: -2px;
+  top: -20px;
+  width: 4px;
+  height: 140%;
+  background: linear-gradient(180deg, transparent, #00eaff, transparent);
+  filter: drop-shadow(0 0 10px #00eaff);
+  animation: sidebar-neon 4s linear infinite;
+}
+
+@keyframes sidebar-neon {
+  0% { transform: translateY(-100%); opacity: 0.5; }
+  100% { transform: translateY(100%); opacity: 1; }
+}
+
+.sidebar h1 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.1;
+  color: #22c55e;
+  text-shadow: 0 0 10px #22c55e55;
+}
+
+/* ======================= CONTROLES SIDEBAR ======================= */
+
+.sidebar button {
+  background: #22c55e;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 14px;
+  color: #020617;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.15s all;
+  font-size: 14px;
+  box-shadow: 0 0 10px #22c55e55;
+}
+
+.sidebar button:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 0 16px #22c55eaa;
+}
+
+.section {
+  margin-top: 4px;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.section label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: #9ca3af;
+}
+
+/* SELECT DE MODELO */
+#model-select {
+  border-radius: 999px;
+  border: 1px solid #374151;
+  background: #020617;
+  color: #e5e7eb;
+  padding: 6px 10px;
+  font-size: 13px;
+  box-shadow: inset 0 0 10px #00eaff22;
+}
+
+/* INPUT FILE - CHOOSE FILES */
+.section input[type="file"] {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 2px solid #00eaff88;
+  background: #041826;
+  color: #d1f4ff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.2s ease;
+  box-shadow: inset 0 0 10px #00eaff55;
+}
+
+.section input[type="file"]:hover {
+  background: #062739;
+  border-color: #00eaff;
+  box-shadow: inset 0 0 14px #00eaffaa;
+}
+
+/* BOTÓN SUBIR & RESUMIR (usa estilo general de sidebar button) */
+#upload-btn {
+  margin-top: 6px;
+}
+
+/* TEXTO INFO (si lo llegas a usar de nuevo) */
+.hint {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.files-status {
+  font-size: 12px;
+  color: #a5b4fc;
+  min-height: 16px;
+}
+
+/* BOTÓN CONSUMO DE TOKENS OPENAI */
+.token-usage-btn {
+  display: block;
+  padding: 12px 14px;
+  border-radius: 12px;
+  text-align: center;
+  background: #041826;
+  border: 1px solid #00eaff;
+  color: #00eaff;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 0 14px #00eaff55;
+  transition: 0.2s ease;
+}
+
+.token-usage-btn:hover {
+  background: #00eaff;
+  color: #000;
+  box-shadow: 0 0 20px #00eaffaa;
+  transform: translateY(-2px);
+}
+
+/* BLOQUE DE FRASES MOTIVACIONALES */
+.quotes {
+  padding: 14px 12px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #d7faff;
+  border-left: 2px solid #00eaff;
+  background: rgba(0, 20, 40, 0.65);
+  border-radius: 8px;
+  box-shadow: inset 0 0 14px #00eaff55;
+}
+
+.quotes p {
+  margin: 0 0 10px 0;
+}
+
+.quotes p:last-child {
+  margin-bottom: 0;
+}
+
+/* ======================= CHAT AREA ======================= */
+
+.chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(circle at top, #020617 0, #02040a 55%, #000 100%);
+}
+
+/* HEADER DEL CHAT */
+.chat-header {
+  padding: 10px 16px;
+  border-bottom: 1px solid #111827;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.chat-header strong {
+  display: block;
+}
+
+.status-dot {
+  color: #22c55e;
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+/* BOTÓN LIMPIAR CHAT */
+#clear-btn {
+  background: #330000;
+  border-radius: 999px;
+  border: 1px solid #ff0033;
+  color: #ffd4d4;
+  font-size: 12px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+#clear-btn:hover {
+  background: #ff0033;
+  color: #000;
+  box-shadow: 0 0 16px #ff0033aa;
+}
+
+/* ZONA DE MENSAJES */
+.chat-log {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* MENSAJES */
+.msg {
+  display: flex;
+}
+
+.msg.user {
+  justify-content: flex-end;
+}
+
+.msg.assistant {
+  justify-content: flex-start;
+}
+
+.bubble {
+  max-width: 70%;
+  padding: 10px 12px;
+  border-radius: 16px;
+  font-size: 14px;
+  white-space: pre-wrap;
+  line-height: 1.35;
+}
+
+/* BURBUJA USER */
+.msg.user .bubble {
+  background: #22c55e;
+  color: #022c16;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 0 10px #22c55e66;
+}
+
+/* BURBUJA ASSISTANT (semi holográfica) */
+.msg.assistant .bubble {
+  background: #020617;
+  border: 1px solid #1f2937;
+  color: #e5e7eb;
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 0 10px #00eaff33;
+}
+
+/* ======================= INPUT DE CHAT ======================= */
+
+.chat-input-area {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid #111827;
+}
+
+.chat-input-area textarea {
+  flex: 1;
+  resize: none;
+  border-radius: 999px;
+  border: 1px solid #374151;
+  background: #020617;
+  color: #e5e7eb;
+  font-size: 14px;
+  padding: 10px 14px;
+  max-height: 160px;
+  min-height: 40px;
+  box-shadow: inset 0 0 8px #00eaff22;
+}
+
+/* BOTÓN ENVIAR (ya usa estilos globales de botones, pero lo afinamos) */
+.chat-input-area button {
+  border: none;
+  border-radius: 999px;
+  background: #22c55e;
+  color: #020617;
+  font-weight: 600;
+  padding: 0 18px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.chat-input-area button:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 0 12px #22c55e88;
+}
+
+/* ======================= RESPONSIVE ======================= */
+
+@media (max-width: 780px) {
+  .app {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .quotes {
+    min-width: 260px;
+  }
+}
+/* --- Estilo Netrunner para botón personalizado de archivos --- */
+.file-upload-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+#file-input {
+  opacity: 0;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.file-upload-btn {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: rgba(0, 255, 200, 0.05);
+  border: 2px solid #00ffd0;
+  color: #00ffd0;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: center;
+  transition: 0.15s ease-in-out;
+  box-shadow: 0 0 8px #00ffd0aa;
+}
+
+.file-upload-btn:hover {
+  background: rgba(0, 255, 200, 0.12);
+  box-shadow: 0 0 14px #00ffd0;
+  transform: translateY(-2px);
+}
+
+#selected-file-name {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #aefbff;
+  text-shadow: 0 0 6px #00eaff;
+}
+/* ============================================
+   ULTRA CYBERPUNK FX LAYER V3 — Netrunner Edition
+   ============================================ */
+
+/* --- Capa de ruido holográfico --- */
 body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background: radial-gradient(circle at 30% 20%, rgba(255,255,0,0.12), transparent 60%),
-                radial-gradient(circle at 80% 70%, rgba(255,255,0,0.08), transparent 60%);
-    pointer-events: none;
-    z-index: 2;
-    animation: fogMove 25s ease-in-out infinite;
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: url("https://www.transparenttextures.com/patterns/asfalt-light.png");
+  opacity: 0.03;
+  z-index: 2;
+}
+
+/* --- Scanlines verticales lentas --- */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(0,255,240,0.05) 0px,
+    rgba(0,255,240,0.05) 1px,
+    transparent 3px,
+    transparent 6px
+  );
+  pointer-events: none;
+  opacity: 0.06;
+  animation: scan-move 18s linear infinite;
+  z-index: 3;
+}
+
+@keyframes scan-move {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-200px); }
+}
+
+/* --- Luz holográfica en bordes de contenedores --- */
+.sidebar,
+.chat {
+  box-shadow:
+    inset 0 0 40px rgba(0,255,180,0.04),
+    inset 0 0 80px rgba(0,255,255,0.03);
+}
+
+/* --- Partículas flotantes (ultra discretas) --- */
+@keyframes floatParticles {
+  0%   { transform: translateY(0) translateX(0); opacity: 0.2; }
+  50%  { transform: translateY(-25px) translateX(15px); opacity: 0.4; }
+  100% { transform: translateY(0) translateX(0); opacity: 0.2; }
+}
+
+.particle {
+  position: fixed;
+  width: 4px;
+  height: 4px;
+  background: #00ffe5;
+  box-shadow: 0 0 8px #00ffe5;
+  border-radius: 50%;
+  opacity: 0.3;
+  z-index: 4;
+  animation: floatParticles 8s infinite ease-in-out;
+}
+
+/* Variaciones */
+.particle:nth-child(2) { animation-duration: 12s; left: 20%; top: 65%; }
+.particle:nth-child(3) { animation-duration: 10s; left: 80%; top: 40%; }
+.particle:nth-child(4) { animation-duration: 14s; left: 50%; top: 80%; }
+
+/* --- Hover Distortion FX --- */
+button:hover,
+select:hover,
+.file-upload-btn:hover {
+  filter: drop-shadow(0 0 8px #00fff0) brightness(1.1);
+  transform: translateY(-2px) scale(1.02);
+}
+/* ================================================================
+   CYBERPUNK 2077 — EDGERUNNERS ULTRA MODE V6
+   Full Neon Yellow + Particle Universe + Glitch FX
+   ================================================================ */
+
+/* --- Capa de fog energético --- */
+body::before {
+  content:"";
+  position:fixed;
+  inset:0;
+  background:radial-gradient(circle at 30% 20%, rgba(255,255,0,0.12), transparent 60%),
+              radial-gradient(circle at 80% 70%, rgba(255,255,0,0.08), transparent 60%);
+  pointer-events:none;
+  z-index:2;
+  animation: fogMove 25s ease-in-out infinite;
 }
 
 @keyframes fogMove {
-    0%   { filter: blur(28px); opacity: .4; }
-    50%  { filter: blur(40px); opacity: .6; }
-    100% { filter: blur(28px); opacity: .4; }
+  0%   { filter:blur(28px); opacity:0.4; }
+  50%  { filter:blur(40px); opacity:0.6; }
+  100% { filter:blur(28px); opacity:0.4; }
 }
 
-/* Scanlines */
+/* --- Scanlines y glitch leve global --- */
 body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 3;
-    background: repeating-linear-gradient(
-        90deg,
-        rgba(255,255,0,0.04) 0px,
-        rgba(255,255,0,0.04) 1px,
-        transparent 4px,
-        transparent 7px
-    );
-    animation: scanSlide 12s linear infinite;
-    opacity: .08;
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:3;
+  background:repeating-linear-gradient(
+      90deg,
+      rgba(255,255,0,0.04) 0px,
+      rgba(255,255,0,0.04) 2px,
+      transparent 4px,
+      transparent 7px
+  );
+  animation: scanSlide 12s linear infinite;
+  opacity:.08;
 }
 
 @keyframes scanSlide {
-    from { transform: translateX(0); }
-    to { transform: translateX(-300px); }
+  from { transform:translateX(0px); }
+  to   { transform:translateX(-300px); }
 }
 
-/* ------------------------------------------
-   SIDEBAR & CHAT GENERAL GLOW
-------------------------------------------- */
-
+/* --- Glow cyberpunk de toda la interfaz --- */
 .sidebar,
 .chat {
-    box-shadow:
-        inset 0 0 50px rgba(255,255,0,0.07),
-        inset 0 0 100px rgba(255,255,0,0.04),
-        0 0 40px rgba(255,255,0,0.06);
+  box-shadow:
+    inset 0 0 50px rgba(255,255,0,0.07),
+    inset 0 0 100px rgba(255,255,0,0.04),
+    0 0 40px rgba(255,255,0,0.06);
 }
 
-/* Línea energética entre panel izquierdo y chat */
-.app::before {
-    content:"";
-    position: fixed;
-    left: 280px;
-    top: 0;
-    width: 3px;
-    height: 100%;
-    background: linear-gradient(
-        to bottom,
-        rgba(0,255,255,0) 0%,
-        cyan 50%,
-        transparent 100%
-    );
-    box-shadow: 0 0 15px cyan, 0 0 25px #00ffffaa;
-    animation: energyFlow 4s linear infinite;
-    z-index: 5;
-}
-
-@keyframes energyFlow {
-    0% { transform: translateY(0); opacity: .3; }
-    50% { transform: translateY(50px); opacity: 1; }
-    100% { transform: translateY(0); opacity: .3; }
-}
-
-/* ------------------------------------------
-   BUBBLES – GLOW LUCY
-------------------------------------------- */
-
-.msg.assistant .bubble,
-.msg.user .bubble {
-    position: relative;
-    animation: lucyGlow 3.5s ease-in-out infinite;
-}
-
-@keyframes lucyGlow {
-    0%   { box-shadow: 0 0 6px #00eaff50, 0 0 15px #fff0; }
-    50%  { box-shadow: 0 0 12px #00eaff90, 0 0 25px #00eaff40; }
-    100% { box-shadow: 0 0 6px #00eaff50, 0 0 15px #fff0; }
-}
-
-/* ------------------------------------------
-   TYPING GLITCH – textarea
-------------------------------------------- */
-
-#chat-input {
-    position: relative;
-    filter: drop-shadow(0 0 4px #00eaff);
-}
-
-#chat-input:focus {
-    animation: typingGlitch .25s steps(2) infinite;
-}
-
-@keyframes typingGlitch {
-    0%   { text-shadow: 2px 0 #00ffe1, -2px 0 #fff; }
-    50%  { text-shadow: -2px 0 #00ffe1, 2px 0 #fff; }
-    100% { text-shadow: 2px 0 #00ffe1, -2px 0 #fff; }
-}
-
-/* ------------------------------------------
-   BOTONES – GLITCH + PULSE
-------------------------------------------- */
-
+/* --- Botones con glitch amarillo --- */
 button,
 .file-upload-btn,
 #upload-btn,
 #clear-btn {
-    position: relative;
-    overflow: hidden;
+  position:relative;
+  overflow:hidden;
 }
 
 button::after,
 .file-upload-btn::after {
-    content:"";
-    position:absolute;
-    inset:0;
-    background: linear-gradient(
-        90deg,
-        transparent 0%,
-        rgba(255,255,0,0.25) 50%,
-        transparent 100%
-    );
-    opacity: 0;
-    transform: translateX(-100%);
-    transition: .2s;
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg,
+    transparent 0%,
+    rgba(255,255,0,0.25) 50%,
+    transparent 100%
+  );
+  opacity:0;
+  transform:translateX(-100%);
+  transition:0.2s;
 }
 
 button:hover::after,
 .file-upload-btn:hover::after {
-    opacity: 1;
-    transform: translateX(100%);
+  opacity:1;
+  transform:translateX(100%);
 }
 
+/* --- Hover neón explosivo --- */
 button:hover,
 .file-upload-btn:hover {
-    filter: drop-shadow(0 0 10px yellow) brightness(1.25);
-    transform: translateY(-2px) scale(1.03);
+  filter:drop-shadow(0 0 10px yellow) brightness(1.25);
+  transform:translateY(-2px) scale(1.03);
 }
 
-.chat-input-area button:hover {
-    animation: lucyPulse 0.5s ease-in-out forwards;
-}
-
-@keyframes lucyPulse {
-    0% { box-shadow: 0 0 5px #00ffd0; }
-    50% { box-shadow: 0 0 25px #00ffd0, 0 0 45px #fff; transform: scale(1.05); }
-    100% { box-shadow: 0 0 10px #00ffd0; transform: scale(1); }
-}
-
-/* ------------------------------------------
-   PARTICLES – NEON YELLOW
-------------------------------------------- */
-
+/* --- Partículas neon amarillas --- */
 .particle {
-    position: fixed;
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: yellow;
-    box-shadow: 0 0 12px yellow, 0 0 22px rgba(255,255,0,0.7);
-    opacity: .6;
-    pointer-events: none;
-    z-index: 4;
-    animation: floatParticle 8s infinite ease-in-out;
+  position:fixed;
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:yellow;
+  box-shadow:0 0 12px yellow, 0 0 22px rgba(255,255,0,0.7);
+  opacity:0.6;
+  pointer-events:none;
+  z-index:4;
+  animation: floatParticle 8s infinite ease-in-out;
 }
 
 @keyframes floatParticle {
-    0%   { transform: translateY(0) translateX(0) scale(.9); opacity:.5; }
-    50%  { transform: translateY(-50px) translateX(25px) scale(1.3); opacity:.9; }
-    100% { transform: translateY(0) translateX(0) scale(.9); opacity:.5; }
+  0%   { transform:translateY(0) translateX(0) scale(0.9); opacity:0.5; }
+  50%  { transform:translateY(-50px) translateX(25px) scale(1.3); opacity:0.9; }
+  100% { transform:translateY(0) translateX(0) scale(0.9); opacity:0.5; }
 }
 
-.particle:nth-child(odd)  { animation-duration: 6s; }
-.particle:nth-child(even) { animation-duration: 10s; }
-.particle:nth-child(3n)   { animation-duration: 12s; }
-.particle:nth-child(5n)   { animation-duration: 14s; }
-
-/* ------------------------------------------
-   GHOST TRAIL – LUCY SPEED EFFECT
-------------------------------------------- */
-
-.ghost {
-    position: fixed;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    pointer-events: none;
-    background: rgba(0,255,255,0.9);
-    box-shadow: 0 0 15px #00eeff, 0 0 30px #00eeff;
-    animation: ghostFade .6s linear forwards;
-    z-index: 99999;
-}
-
-@keyframes ghostFade {
-    from { transform: scale(1); opacity: 1; }
-    to   { transform: scale(2.5); opacity: 0; }
-}
-
-/* ------------------------------------------
-   CYBERPSYCHO MODE – SCREEN SHAKE, BLUR, ABERRATION
-------------------------------------------- */
-
-.app {
-    animation: psychoHue 6s linear infinite;
-}
-
-@keyframes psychoHue {
-    0%   { filter: none; }
-    25%  { filter: hue-rotate(10deg) saturate(1.2); }
-    50%  { filter: hue-rotate(-10deg) saturate(1.4) contrast(1.15); }
-    75%  { filter: hue-rotate(4deg) blur(.4px); }
-    100% { filter: none; }
-}
-
-/* Shake suave ocasional */
-@keyframes psychoShake {
-    0% { transform: translate(0,0); }
-    25% { transform: translate(2px,-2px); }
-    50% { transform: translate(-2px,2px); }
-    75% { transform: translate(2px,1px); }
-    100% { transform: translate(0,0); }
-}
-
-.chat-log {
-    animation: psychoShake 7s infinite steps(1);
-}
-
-/* Chromatic Aberration sutil */
-.chromatic {
-    filter: drop-shadow(2px 0 red) drop-shadow(-2px 0 cyan);
-}
+/* --- Variaciones aleatorias automáticas --- */
+.particle:nth-child(odd)  { animation-duration:6s; }
+.particle:nth-child(even) { animation-duration:10s; }
+.particle:nth-child(3n)   { animation-duration:12s; }
+.particle:nth-child(5n)   { animation-duration:14s; }
