@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang=\"es\">
+<head>
+  <meta charset=\"UTF-8\">
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+  <title>Login - Andres IA</title>
+  <link rel=\"stylesheet\" href=\"/static/style.css\">
+</head>
+<body>
+<div class=\"login-wrapper\">
+  <div class=\"login-card\">
+    <h1>Andres IA Access</h1>
+    <p class=\"login-subtitle\">Solo personal autorizado. Ingresa tus credenciales.</p>
+    {% if error %}
+      <div class=\"login-error\">{{ error }}</div>
+    {% endif %}
+    <form method=\"post\" class=\"login-form\">
+      <label for=\"username\">Usuario</label>
+      <input id=\"username\" name=\"username\" type=\"text\" autocomplete=\"username\" required>
+
+      <label for=\"password\">Contraseña</label>
+      <input id=\"password\" name=\"password\" type=\"password\" autocomplete=\"current-password\" required>
+
+      <button type=\"submit\">Entrar</button>
+    </form>
+    <p class=\"login-hint\">Las credenciales se leen de las variables APP_USER y APP_PASS en tu stack de Portainer.</p>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,16 @@
+version: '3.9'
+services:
+  ia:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ia
+    ports:
+      - "8080:8080"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL}
+      - FLASK_SECRET_KEY=${FLASK_SECRET_KEY}
+    volumes:
+      - ./app/uploads:/app/uploads
+    restart: unless-stopped

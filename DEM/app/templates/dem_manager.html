@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+  <meta charset=\"UTF-8\" />
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />
+  <title>DEMS Manager</title>
+  <link rel=\"stylesheet\" href=\"/static/style.css\" />
+</head>
+<body>
+<div class=\"app\">
+  <aside class=\"sidebar\">
+    <h1>DEMS Manager</h1>
+    <button type=\"button\" onclick=\"window.location.href='/'\">← Back to Chat</button>
+
+    <div class=\"section\">
+      <p class=\"hint\">
+        Manage all your DEM projects, notes, documents and AI reports from here.
+      </p>
+    </div>
+
+    <div class=\"section small\">
+      <div class=\"quotes\">
+        <p>“Projects without updates die in silence. Keep them moving.”</p>
+        <p>“Clarity, ownership, and action – every DEM needs all three.”</p>
+      </div>
+    </div>
+  </aside>
+
+  <div class=\"holo-arrow\"></div>
+
+  <main class=\"chat\">
+    <header class=\"chat-header\">
+      <div>
+        <strong>DEMS Portfolio</strong>
+        <span id=\"dems-notifications\" class=\"status-dot\">● Monitoring</span>
+      </div>
+      <button id=\"back-chat-btn\" type=\"button\">Back to Chat</button>
+    </header>
+
+    <div class=\"dems-layout\">
+      <div class=\"dems-toolbar\">
+        <div>
+          <button id=\"create-project-btn\" type=\"button\">+ New DEM Project</button>
+        </div>
+        <div style=\"display:flex; gap:8px;\">
+          <button id=\"generate-report-btn\" type=\"button\">⚙ Generate AI Portfolio Report</button>
+          <button id=\"export-excel-btn\" type=\"button\">📊 Export to Excel</button>
+        </div>
+      </div>
+
+      <section id=\"dems-form-section\" class=\"dems-form-section hidden\">
+        <h2>Create / Register DEM Project</h2>
+        <form id=\"dems-form\" class=\"dems-form\">
+          <div class=\"field\">
+            <label for=\"dem-name\">DEM Name</label>
+            <input id=\"dem-name\" type=\"text\" required />
+          </div>
+
+          <div class=\"field\">
+            <label for=\"dem-sponsor\">Sponsor</label>
+            <input id=\"dem-sponsor\" type=\"text\" required />
+          </div>
+
+          <div class=\"field\">
+            <label for=\"dem-requester\">Requester</label>
+            <input id=\"dem-requester\" type=\"text\" required />
+          </div>
+
+          <div class=\"field\">
+            <label for=\"dem-ba\">BA Owner</label>
+            <input id=\"dem-ba\" type=\"text\" required />
+          </div>
+
+          <div class=\"field\">
+            <label for=\"dem-title\">Project Title</label>
+            <input id=\"dem-title\" type=\"text\" required />
+          </div>
+
+          <div class=\"field\">
+            <label for=\"dem-change\">Change requested</label>
+            <textarea id=\"dem-change\" rows=\"2\"></textarea>
+          </div>
+
+          <div class=\"field\">
+            <label for=\"dem-cc\">Cost Center</label>
+            <input id=\"dem-cc\" type=\"text\" />
+          </div>
+
+          <div class=\"field\">
+            <label for=\"dem-status\">DEM Status</label>
+            <select id=\"dem-status\">
+              <option>Idea</option>
+              <option>Intake</option>
+              <option>Analysis</option>
+              <option>Feasibility</option>
+              <option>In Development</option>
+              <option>Testing / UAT</option>
+              <option>Go-Live</option>
+              <option>Closed</option>
+              <option>On Hold</option>
+            </select>
+          </div>
+
+          <div class=\"field\">
+            <label for=\"dem-workflow-status\">Workflow Status</label>
+            <select id=\"dem-workflow-status\">
+              <option>Intake</option>
+              <option>Business Validation</option>
+              <option>IT Analysis</option>
+              <option>Solution Design</option>
+              <option>Build / Configuration</option>
+              <option>Testing</option>
+              <option>Deployment</option>
+              <option>Hypercare</option>
+            </select>
+          </div>
+
+          <div class=\"field\">
+            <label for=\"dem-owner\">Current Task Owner</label>
+            <input id=\"dem-owner\" type=\"text\" />
+          </div>
+
+          <div class=\"field\">
+            <label for=\"dem-start\">Start Date</label>
+            <input id=\"dem-start\" type=\"date\" />
+          </div>
+
+          <div class=\"field\">
+            <label for=\"dem-initial-note\">Initial Update Note (optional)</label>
+            <textarea id=\"dem-initial-note\" rows=\"2\"
+              placeholder=\"Short context or first update for this DEM.\"></textarea>
+          </div>
+
+          <div class=\"field full-row\">
+            <button type=\"submit\">Save DEM</button>
+            <button type=\"button\" id=\"cancel-form-btn\" class=\"secondary\">Cancel</button>
+          </div>
+        </form>
+      </section>
+
+      <section class=\"dems-projects-section\">
+        <h2>Active DEM Projects</h2>
+        <div id=\"dems-projects\" class=\"dems-projects\"></div>
+      </section>
+
+      <section class=\"dems-report-section\">
+        <h2>AI Portfolio Report</h2>
+        <div id=\"dem-report-output\">Click 'Generate AI Portfolio Report' to generate a fresh report.</div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div class=\"particle\"></div>
+<div class=\"particle\"></div>
+<div class=\"particle\"></div>
+<div class=\"particle\"></div>
+<div class=\"particle\"></div>
+<div class=\"particle\"></div>
+<div class=\"particle\"></div>
+<div class=\"particle\"></div>
+<div class=\"particle\"></div>
+<div class=\"particle\"></div>
+
+<script>
+  const backChatBtn = document.getElementById('back-chat-btn');
+  const createProjectBtn = document.getElementById('create-project-btn');
+  const generateReportBtn = document.getElementById('generate-report-btn');
+  const exportExcelBtn = document.getElementById('export-excel-btn');
+  const formSection = document.getElementById('dems-form-section');
+  const form = document.getElementById('dems-form');
+  const cancelFormBtn = document.getElementById('cancel-form-btn');
+  const projectsContainer = document.getElementById('dems-projects');
+  const notif = document.getElementById('dems-notifications');
+  const reportOutput = document.getElementById('dem-report-output');
+
+  let projects = [];
+
+  backChatBtn.addEventListener('click', () => {
+    window.location.href = '/';
+  });
+
+  createProjectBtn.addEventListener('click', () => {
+    form.reset();
+    formSection.classList.remove('hidden');
+    formSection.scrollIntoView({ behavior: 'smooth' });
+  });
+
+  cancelFormBtn.addEventListener('click', () => {
+    formSection.classList.add('hidden');
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const payload = {
+      name: document.getElementById('dem-name').value.trim(),
+      sponsor: document.getElementById('dem-sponsor').value.trim(),
+      requester: document.getElementById('dem-requester').value.trim(),
+      ba_owner: document.getElementById('dem-ba').value.trim(),
+      title: document.getElementById('dem-title').value.trim(),
+      change_request: document.getElementById('dem-change').value.trim(),
+      cost_center: document.getElementById('dem-cc').value.trim(),
+      status: document.getElementById('dem-status').value,
+      workflow_status: document.getElementById('dem-workflow-status').value,
+      current_owner: document.getElementById('dem-owner').value.trim(),
+      start_date: document.getElementById('dem-start').value,
+      initial_note: document.getElementById('dem-initial-note').value.trim()
+    };
+
+    try {
+      const res = await fetch('/api/dems/projects', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.project) {
+        projects.push(data.project);
+        renderProjects();
+        formSection.classList.add('hidden');
+      } else {
+        alert('Error creating DEM: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Connection error creating DEM: ' + err);
+    }
+  });
+
+  generateReportBtn.addEventListener('click', async () => {
+    reportOutput.textContent = 'Generating AI report...';
+    try {
+      const res = await fetch('/api/dems/report', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({})
+      });
+      const data = await res.json();
+      if (data.report) {
+        reportOutput.textContent = data.report;
+      } else {
+        reportOutput.textContent = 'Error generating report: ' + (data.error || 'Unknown error');
+      }
+    } catch (err) {
+      reportOutput.textContent = 'Connection error generating report: ' + err;
+    }
+  });
+
+  exportExcelBtn.addEventListener('click', async () => {
+    try {
+      const res = await fetch('/api/dems/export');
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert('Error exporting to Excel: ' + (data.error || res.statusText));
+        return;
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'dems_portfolio.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Connection error exporting to Excel: ' + err);
+    }
+  });
+
+  function renderProjects() {
+    projectsContainer.innerHTML = '';
+    if (!projects.length) {
+      projectsContainer.innerHTML = "<p class='hint'>No DEMs registered yet. Create one using the button above.</p>";
+      notif.textContent = '● Monitoring – no projects yet';
+      return;
+    }
+
+    let staleCount = 0;
+
+    projects.forEach(p => {
+      if (p.stale) staleCount++;
+
+      const card = document.createElement('article');
+      card.className = 'dem-card' + (p.stale ? ' stale' : '');
+
+      const header = document.createElement('div');
+      header.className = 'dem-card-header';
+      header.innerHTML = `
+        <div>
+          <h3>${p.name || '(No DEM Name)'}</h3>
+          <p class="dem-subtitle">${p.title || ''}</p>
+        </div>
+        <div class="dem-tags">
+          <span class="dem-tag primary">${p.status || 'N/A'}</span>
+          <span class="dem-tag">${p.workflow_status || ''}</span>
+        </div>
+      `;
+      card.appendChild(header);
+
+      const meta = document.createElement('div');
+      meta.className = 'dem-meta';
+      meta.innerHTML = `
+        <p><strong>Sponsor:</strong> ${p.sponsor || '-'}</p>
+        <p><strong>Requester:</strong> ${p.requester || '-'}</p>
+        <p><strong>BA Owner:</strong> ${p.ba_owner || '-'}</p>
+        <p><strong>Current Task Owner:</strong> ${p.current_owner || '-'}</p>
+        <p><strong>Cost Center:</strong> ${p.cost_center || '-'}</p>
+        <p><strong>Start Date:</strong> ${p.start_date || '-'}</p>
+        <p><strong>Duration (days):</strong> ${p.duration_days ?? '-'}</p>
+      `;
+      card.appendChild(meta);
+
+      const lastNote = document.createElement('div');
+      lastNote.className = 'dem-last-note';
+      lastNote.innerHTML = `
+        <strong>Last Update Note:</strong>
+        <p>${p.last_note || 'No notes yet.'}</p>
+      `;
+      card.appendChild(lastNote);
+
+      if (p.stale) {
+        const staleBanner = document.createElement('div');
+        staleBanner.className = 'dem-stale-banner';
+        staleBanner.textContent = '⚠ No updates for 5 or more days. Please review this DEM.';
+        card.appendChild(staleBanner);
+      }
+
+      const actions = document.createElement('div');
+      actions.className = 'dem-actions';
+
+      const noteBtn = document.createElement('button');
+      noteBtn.type = 'button';
+      noteBtn.textContent = 'Add Update Note';
+      noteBtn.addEventListener('click', () => addNote(p.id));
+
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = '.doc,.docx,.pdf,.txt';
+      fileInput.style.display = 'none';
+
+      const uploadBtn = document.createElement('button');
+      uploadBtn.type = 'button';
+      uploadBtn.textContent = 'Attach Word & Analyze';
+      uploadBtn.addEventListener('click', () => fileInput.click());
+
+      fileInput.addEventListener('change', () => {
+        if (fileInput.files && fileInput.files.length) {
+          uploadDoc(p.id, fileInput.files[0]);
+        }
+      });
+
+      const insightsBtn = document.createElement('button');
+      insightsBtn.type = 'button';
+      insightsBtn.textContent = 'View AI Document Insights';
+      insightsBtn.addEventListener('click', () => {
+        if (p.doc_ai) {
+          alert(p.doc_ai);
+        } else {
+          alert('No AI document insights for this DEM yet.');
+        }
+      });
+
+      actions.appendChild(noteBtn);
+      actions.appendChild(uploadBtn);
+      actions.appendChild(insightsBtn);
+      actions.appendChild(fileInput);
+
+      card.appendChild(actions);
+      projectsContainer.appendChild(card);
+    });
+
+    if (staleCount > 0) {
+      notif.textContent = `● ${staleCount} DEM(s) without updates for 5+ days`;
+    } else {
+      notif.textContent = '● All DEMs updated in the last 5 days';
+    }
+  }
+
+  async function addNote(projectId) {
+    const text = prompt('New update note for this DEM:');
+    if (!text) return;
+
+    try {
+      const res = await fetch(`/api/dems/projects/${projectId}/note`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ text })
+      });
+      const data = await res.json();
+      if (data.project) {
+        projects = projects.map(p => p.id === projectId ? data.project : p);
+        renderProjects();
+      } else {
+        alert('Error adding note: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Connection error adding note: ' + err);
+    }
+  }
+
+  async function uploadDoc(projectId, file) {
+    const fd = new FormData();
+    fd.append('file', file);
+
+    alert('Uploading document and generating AI analysis. This can take a few seconds.');
+
+    try {
+      const res = await fetch(`/api/dems/projects/${projectId}/attach`, {
+        method: 'POST',
+        body: fd
+      });
+      const data = await res.json();
+      if (data.project) {
+        projects = projects.map(p => p.id === projectId ? data.project : p);
+        renderProjects();
+        alert("AI analysis generated for this DEM.\n\nYou can view it with 'View AI Document Insights'.");
+      } else {
+        alert('Error attaching document: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Connection error attaching document: ' + err);
+    }
+  }
+
+  async function loadProjects() {
+    try {
+      const res = await fetch('/api/dems/projects');
+      const data = await res.json();
+      projects = data.projects || [];
+      renderProjects();
+    } catch (err) {
+      projectsContainer.innerHTML = "<p class='hint'>Error loading DEM list: " + err + "</p>";
+    }
+  }
+
+  document.addEventListener('mousemove', (e) => {
+    const g = document.createElement('div');
+    g.classList.add('ghost');
+    g.style.left = e.pageX + 'px';
+    g.style.top = e.pageY + 'px';
+    document.body.appendChild(g);
+    setTimeout(() => g.remove(), 600);
+  });
+
+  loadProjects();
+</script>
+</body>
+</html>
