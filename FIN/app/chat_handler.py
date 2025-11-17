@@ -69,24 +69,42 @@ def _log(line: str) -> None:
 
 
 def extract_text(path: str) -> str:
-    """Lee texto de TXT/MD o PDF (si pypdf está instalado)."""
+    """Extrae texto de TXT, PDF, DOCX y DOC."""
     lower = path.lower()
     try:
+        # TXT / MD
         if lower.endswith(".txt") or lower.endswith(".md"):
             with open(path, "r", encoding="utf-8", errors="ignore") as f:
                 return f.read()
+
+        # PDF
         if lower.endswith(".pdf") and PdfReader is not None:
             reader = PdfReader(path)
             parts = []
             for page in reader.pages:
                 try:
                     parts.append(page.extract_text() or "")
-                except Exception:
-                    continue
+                except:
+                    pass
             return "\n".join(parts)
+
+        # DOCX
+        if lower.endswith(".docx") and Document is not None:
+            doc = Document(path)
+            return "\n".join(p.text for p in doc.paragraphs)
+
+        # DOC (legacy)
+        if lower.endswith(".doc"):
+            try:
+                import textract
+                return textract.process(path).decode("utf-8", errors="ignore")
+            except:
+                return ""
     except Exception as e:
         _log(f"Error leyendo archivo {path}: {e}")
+
     return ""
+
 
 
 def load_dems():
