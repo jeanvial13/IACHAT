@@ -1026,3 +1026,76 @@ body::after {
     grid-template-columns: 1fr;
   }
 }
+/* ----------- MODAL STYLE --------------- */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: #0f172a;
+  border: 1px solid #22d3ee;
+  border-radius: 12px;
+  padding: 20px;
+  width: 500px;
+  max-width: 90%;
+  color: white;
+  box-shadow: 0 0 25px #22d3eeaa;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-grid label {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  color: #a5f3fc;
+}
+
+.form-grid input,
+.form-grid select {
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #020617;
+  border: 1px solid #334155;
+  color: white;
+}
+
+.modal-actions {
+  margin-top: 15px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.modal-actions button {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+#cancel-modal {
+  background: #334155;
+}
+
+#save-project {
+  background: #06b6d4;
+  color: black;
+}
+
