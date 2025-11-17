@@ -510,6 +510,79 @@ def add_dem_note(id):
         return jsonify({"error": "DEM no encontrado."}), 404
     return jsonify({"project": project})
 
+# ---- EDIT NOTE ---------------------------------------------------------
+@app.route("/api/dems/projects/<id>/note/edit", methods=["POST"])
+def edit_dem_note(id):
+    maybe = require_auth()
+    if maybe is not None:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.get_json() or {}
+    index = data.get("index")
+    new_text = (data.get("text") or "").strip()
+
+    if index is None or new_text == "":
+        return jsonify({"error": "Invalid index or empty text."}), 400
+
+    def updater(d):
+        notes = d.get("notes") or []
+        if not isinstance(notes, list):
+            notes = []
+        if index < 0 or index >= len(notes):
+            raise ValueError("Invalid index")
+
+        # Update note content, keep date or refresh it
+        notes[index] = {
+            "text": new_text,
+            "date": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        }
+        d["notes"] = notes
+
+    try:
+        project = _update_dem(id, updater)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+    if not project:
+        return jsonify({"error": "DEM not found"}), 404
+    return jsonify({"project": project})
+
+
+# ---- DELETE NOTE ---------------------------------------------------------
+@app.route("/api/dems/projects/<id>/note/delete", methods=["POST"])
+def delete_dem_note(id):
+    maybe = require_auth()
+    if maybe is not None:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.get_json() or {}
+    index = data.get("index")
+
+    if index is None:
+        return jsonify({"error": "Missing index"}), 400
+
+    def updater(d):
+        notes = d.get("notes") or []
+        if not isinstance(notes, list):
+            notes = []
+
+        if index < 0 or index >= len(notes):
+            raise ValueError("Invalid index")
+
+        notes.pop(index)
+        d["notes"] = notes
+
+    try:
+        project = _update_dem(id, updater)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+    if not project:
+        return jsonify({"error": "DEM not found"}), 404
+
+    return jsonify({"project": project})
+
+
 
 @app.route("/api/dems/projects/<id>/update", methods=["POST"])
 def update_dem(id):
