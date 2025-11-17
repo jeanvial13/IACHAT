@@ -45,22 +45,39 @@
 
         <label>Status
           <select name="status">
-            <option>Idea</option>
-            <option>Analysis</option>
-            <option>Solution Design</option>
-            <option>Build</option>
-            <option>UAT</option>
-            <option>Go-Live</option>
+             <option>Specific Requirements</option>
+              <option>Business Case Creation</option>
+              <option>Review/Cost Estimation</option>
+              <option>Regional Business Center</option>
+              <option>Business Operations Approval</option>
+              <option>Functional Design</option>
+              <option>SOW Request</option>
+              <option>Budget Approval</option>
+              <option>CLM Request</option>
+              <option>Create CSR/PO</option>
+              <option>Change Request in Progress</option>
+              <option>Cancel</option>
+              <option>Closed</option>
           </select>
         </label>
 
         <label>Workflow Status
           <select name="workflow_status">
-            <option>Intake</option>
-            <option>In Progress</option>
-            <option>On Hold</option>
-            <option>Waiting Approval</option>
-            <option>Completed</option>
+          <option>Pending Est. Approval</option>
+              <option>Pending SOW</option>
+              <option>Pending CCB Review</option>
+              <option>CLM Process</option>
+              <option>Development</option>
+              <option>Development Queue</option>
+              <option>IT Testing</option>
+              <option>Dev Business Testing</option>
+              <option>Migration UAT</option>
+              <option>Migration PROD</option>
+              <option>IT Review</option>
+              <option>IT MGR Approval</option>
+              <option>Rejected</option>
+              <option>Closed</option>
+              <option>In Production</option>
           </select>
         </label>
 
@@ -484,26 +501,36 @@
   }
 
   async function addNote(projectId) {
-    const text = prompt('New update note for this DEM:');
-    if (!text) return;
 
-    try {
-      const res = await fetch(`/api/dems/projects/${projectId}/note`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ text })
-      });
-      const data = await res.json();
-      if (data.project) {
-        replaceProject(data.project);
-        renderAll();
-      } else {
-        alert('Error adding note: ' + (data.error || 'Unknown error'));
-      }
-    } catch (err) {
-      alert('Connection error adding note: ' + err);
+  // Nuevo modal tipo textarea
+  const text = prompt("Enter your update note:");
+
+  if (!text) return;
+
+  const timestamp = new Date().toISOString().slice(0,16).replace("T"," ");
+
+  const notePayload = `[${timestamp}] — ${text}`;
+
+  try {
+    const res = await fetch(`/api/dems/projects/${projectId}/note`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ text: notePayload })
+    });
+
+    const data = await res.json();
+
+    if (data.project) {
+      replaceProject(data.project);
+      renderAll();
+    } else {
+      alert("Error saving note: " + (data.error || "Unknown"));
     }
+  } catch (err) {
+    alert("Connection error saving note: " + err);
   }
+}
+
 
   async function editProject(projectId) {
     const project = [...activeProjects, ...archivedProjects].find(p => p.id === projectId);
