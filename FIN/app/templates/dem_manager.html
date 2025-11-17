@@ -6,7 +6,8 @@
   <title>Project Manager</title>
   <link rel="stylesheet" href="/static/style.css" />
 </head>
-  <!-- MODAL: New / Edit Project -->
+
+<!-- MODAL: New / Edit Project -->
 <div id="project-modal" class="modal hidden">
   <div class="modal-content">
     <h2 id="modal-title">New Project</h2>
@@ -96,7 +97,7 @@
     <div class="section small">
       <div class="quotes">
         <p>“Projects gain power when they stay visible.”</p>
-        <p>“Clarity, ownership and follow‑up keep change alive.”</p>
+        <p>“Clarity, ownership and follow-up keep change alive.”</p>
       </div>
     </div>
   </aside>
@@ -177,63 +178,47 @@
   let activeProjects = [];
   let archivedProjects = [];
   let currentTab = 'active';
-  let editingProjectId = null;
   let searchText = '';
 
-  // ----- Simple modal form using prompt-style (lightweight) -----
- function openProjectForm(existing) {
-  const modal = document.getElementById("project-modal");
-  const form = document.getElementById("project-form");
-  const title = document.getElementById("modal-title");
+  // ----- Modal form -----
+  function openProjectForm(existing) {
+    const modal = document.getElementById("project-modal");
+    const form = document.getElementById("project-form");
+    const title = document.getElementById("modal-title");
 
-  // Show modal
-  modal.classList.remove("hidden");
+    // Show modal
+    modal.classList.remove("hidden");
 
-  // Fill with existing data or empty
-  form.reset();
-  if (existing) {
-    title.textContent = "Edit Project";
-    for (const k in existing) {
-      if (form[k]) form[k].value = existing[k];
+    // Fill with existing data or empty
+    form.reset();
+    if (existing) {
+      title.textContent = "Edit Project";
+      for (const k in existing) {
+        if (form[k]) form[k].value = existing[k];
+      }
+    } else {
+      title.textContent = "New Project";
     }
-  } else {
-    title.textContent = "New Project";
+
+    return new Promise(resolve => {
+      form.onsubmit = e => {
+        e.preventDefault();
+        modal.classList.add("hidden");
+
+        const data = Object.fromEntries(new FormData(form));
+        resolve(data);
+      };
+
+      document.getElementById("cancel-modal").onclick = () => {
+        modal.classList.add("hidden");
+        resolve(null);
+      };
+    });
   }
 
-  return new Promise(resolve => {
-    form.onsubmit = e => {
-      e.preventDefault();
-      modal.classList.add("hidden");
-
-      const data = Object.fromEntries(new FormData(form));
-      resolve(data);
-    };
-
-    document.getElementById("cancel-modal").onclick = () => {
-      modal.classList.add("hidden");
-      resolve(null);
-    };
-  });
-}
-
-
-    return {
-      name,
-      sponsor,
-      requester,
-      ba_owner,
-      title,
-      change_request,
-      cost_center,
-      status,
-      workflow_status,
-      current_owner,
-      start_date
-    };
-  }
-
+  // ----- Create project -----
   createProjectBtn.addEventListener('click', async () => {
-    const payload = openProjectForm(null);
+    const payload = await openProjectForm(null);   // 👈 AQUÍ FALTABA EL await
     if (!payload) return;
     try {
       const res = await fetch('/api/dems/projects', {
@@ -253,6 +238,7 @@
     }
   });
 
+  // ----- Report generation -----
   generateReportBtn.addEventListener('click', async () => {
     reportOutput.textContent = 'Generating report...';
     try {
@@ -298,6 +284,7 @@
   downloadDocxBtn.addEventListener('click', () => downloadReport('docx'));
   downloadPdfBtn.addEventListener('click', () => downloadReport('pdf'));
 
+  // ----- Tabs -----
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
       tabs.forEach(t => t.classList.remove('active'));
@@ -307,6 +294,7 @@
     });
   });
 
+  // ----- Search -----
   searchInput.addEventListener('input', () => {
     searchText = searchInput.value.toLowerCase();
     renderAll();
@@ -520,7 +508,7 @@
   async function editProject(projectId) {
     const project = [...activeProjects, ...archivedProjects].find(p => p.id === projectId);
     if (!project) return;
-    const updated = openProjectForm(project);
+    const updated = await openProjectForm(project);  // 👈 AQUÍ TAMBIÉN FALTABA await
     if (!updated) return;
     try {
       const res = await fetch(`/api/dems/projects/${projectId}/update`, {
