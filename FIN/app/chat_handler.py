@@ -908,8 +908,7 @@ def dem_download(fmt):
         doc = Document()
         doc.add_heading(title, level=1)
         doc.add_paragraph(
-            "This document summarizes the current status of DEM projects, "
-            "including overall situation, workflow status and task ownership."
+          
         )
         doc.add_paragraph("")
         for line in body.split("\n"):
