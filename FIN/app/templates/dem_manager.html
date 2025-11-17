@@ -115,7 +115,7 @@
       <div class="dems-toolbar">
         <div class="dems-toolbar-top">
           <div style="display:flex; gap:8px; align-items:center;">
-            <button id="create-project-btn" type="button">+ New Project</button>
+            <button id="create-project-btn" type="button" class="btn-cyber">✦ New Project</button>
             <div class="dems-tabs">
               <button type="button" class="dems-tab active" data-tab="active">Active DEMs</button>
               <button type="button" class="dems-tab" data-tab="archived">Archived DEMs</button>
@@ -181,20 +181,41 @@
   let searchText = '';
 
   // ----- Simple modal form using prompt-style (lightweight) -----
-  function openProjectForm(existing) {
-    const base = existing || {};
-    const name = prompt('DEM / Project name:', base.name || '');
-    if (!name) return null;
-    const sponsor = prompt('Sponsor:', base.sponsor || '');
-    const requester = prompt('Requester:', base.requester || '');
-    const ba_owner = prompt('BA Owner:', base.ba_owner || '');
-    const title = prompt('Project Title:', base.title || '');
-    const change_request = prompt('Change requested (short description):', base.change_request || '');
-    const cost_center = prompt('Cost Center:', base.cost_center || '');
-    const status = prompt('DEM Status (Idea, Analysis, etc.):', base.status || 'Idea');
-    const workflow_status = prompt('Workflow Status:', base.workflow_status || 'Intake');
-    const current_owner = prompt('Current Task Owner:', base.current_owner || '');
-    const start_date = prompt('Start Date (YYYY-MM-DD):', base.start_date || '');
+ function openProjectForm(existing) {
+  const modal = document.getElementById("project-modal");
+  const form = document.getElementById("project-form");
+  const title = document.getElementById("modal-title");
+
+  // Show modal
+  modal.classList.remove("hidden");
+
+  // Fill with existing data or empty
+  form.reset();
+  if (existing) {
+    title.textContent = "Edit Project";
+    for (const k in existing) {
+      if (form[k]) form[k].value = existing[k];
+    }
+  } else {
+    title.textContent = "New Project";
+  }
+
+  return new Promise(resolve => {
+    form.onsubmit = e => {
+      e.preventDefault();
+      modal.classList.add("hidden");
+
+      const data = Object.fromEntries(new FormData(form));
+      resolve(data);
+    };
+
+    document.getElementById("cancel-modal").onclick = () => {
+      modal.classList.add("hidden");
+      resolve(null);
+    };
+  });
+}
+
 
     return {
       name,
