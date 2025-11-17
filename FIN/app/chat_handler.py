@@ -1,6 +1,7 @@
 import os
 import time
 import io
+import json
 from datetime import datetime, timedelta
 from flask import (
     Flask,
@@ -69,7 +70,7 @@ def _log(line: str) -> None:
 
 
 def extract_text(path: str) -> str:
-    """Extrae texto de TXT, PDF, DOCX y DOC."""
+    """Extract text from TXT, PDF, DOCX and DOC."""
     lower = path.lower()
     try:
         # TXT / MD
@@ -84,7 +85,7 @@ def extract_text(path: str) -> str:
             for page in reader.pages:
                 try:
                     parts.append(page.extract_text() or "")
-                except:
+                except Exception:
                     pass
             return "\n".join(parts)
 
@@ -97,14 +98,14 @@ def extract_text(path: str) -> str:
         if lower.endswith(".doc"):
             try:
                 import textract
+
                 return textract.process(path).decode("utf-8", errors="ignore")
-            except:
+            except Exception:
                 return ""
     except Exception as e:
-        _log(f"Error leyendo archivo {path}: {e}")
+        _log(f"Error reading file {path}: {e}")
 
     return ""
-
 
 
 def load_dems():
@@ -129,8 +130,23 @@ def save_dems(dems):
         _log(f"Error saving DEM file: {e}")
 
 
+def _format_note(note) -> str:
+    """Return a human-readable note with date if available."""
+    if isinstance(note, dict):
+        text = note.get("text", "")
+        date = note.get("date")
+        if date:
+            return f"[{date}] {text}"
+        return text
+    # backward compatibility with old plain-string notes
+    return str(note)
+
+
 def enrich_dem(dem):
+    """Add computed fields (duration_days, last_note, sla_breached, archived)."""
     dem = dict(dem)
+
+    # Duration in days
     start = dem.get("start_date")
     dem["duration_days"] = None
     if start:
@@ -140,9 +156,14 @@ def enrich_dem(dem):
         except Exception:
             pass
 
+    # Last note (formatted)
     notes = dem.get("notes") or []
-    dem["last_note"] = notes[-1] if notes else ""
+    if notes:
+        dem["last_note"] = _format_note(notes[-1])
+    else:
+        dem["last_note"] = ""
 
+    # SLA (5 days without update)
     updated_str = dem.get("updated_at") or dem.get("created_at")
     sla_breached = False
     if updated_str:
@@ -153,51 +174,81 @@ def enrich_dem(dem):
         except Exception:
             pass
     dem["sla_breached"] = sla_breached
+
+    # Archived flag default
     if "archived" not in dem:
         dem["archived"] = False
+
+    # Ensure documents list exists (for Option B)
+    docs = dem.get("documents")
+    if docs is None:
+        dem["documents"] = []
+    elif not isinstance(docs, list):
+        dem["documents"] = []
+
     return dem
 
 
 def build_portfolio_text(dems):
+    """Build corporate portfolio text in English for TXT/DOCX/PDF and UI."""
     if not dems:
-        return "No hay proyectos DEM registrados actualmente."
+        return "There are currently no DEM projects registered."
+
+    run_date_human = datetime.utcnow().strftime("%B %d, %Y")
+    header = f"{run_date_human} — Andres Villanueva DEMS Report"
 
     lines = []
-    lines.append("DEMS Portfolio Report")
+    lines.append(header)
     lines.append("")
     lines.append(
-        "Este documento resume el estado actual de los proyectos DEM activos y archivados, "
-        "incluyendo su situación general, Workflow Status vigente y el responsable de la siguiente actividad."
+        "This document summarizes the current status of active and archived DEM projects, "
+        "including overall situation, Workflow Status, current task owner and SLA condition."
     )
     lines.append("")
     for dem in dems:
         e = enrich_dem(dem)
-        lines.append(f"DEM: {e.get('name','(sin nombre)')}")
-        lines.append(f"  Project Title: {e.get('title','')}")
-        lines.append(f"  Sponsor: {e.get('sponsor','-')}  |  Requester: {e.get('requester','-')}")
-        lines.append(f"  BA Owner: {e.get('ba_owner','-')}  |  Current Task Owner: {e.get('current_owner','-')}")
-        lines.append(f"  Cost Center: {e.get('cost_center','-')}")
-        lines.append(f"  Start Date: {e.get('start_date','-')}  |  Duration (days): {e.get('duration_days')}")
-        lines.append(f"  DEM Status: {e.get('status','-')}")
-        lines.append(f"  Workflow Status: {e.get('workflow_status','-')}")
+        lines.append(f"DEM: {e.get('name', '(no name)')}")
+        lines.append(f"  Project Title: {e.get('title', '')}")
         lines.append(
-            "  SLA: " + ("SLA Breached" if e.get("sla_breached") else "SLA OK")
+            f"  Sponsor: {e.get('sponsor', '-')}"
+            f"  |  Requester: {e.get('requester', '-')}"
         )
-        notes = e.get("notes") or []
-        if notes:
-            last_two = notes[-2:]
-            lines.append("  Last Notes:")
+        lines.append(
+            f"  BA Owner: {e.get('ba_owner', '-')}"
+            f"  |  Current Task Owner: {e.get('current_owner', '-')}"
+        )
+        lines.append(f"  Cost Center: {e.get('cost_center', '-')}")
+        lines.append(
+            f"  Start Date: {e.get('start_date', '-')}"
+            f"  |  Duration (days): {e.get('duration_days')}"
+        )
+        lines.append(f"  DEM Status: {e.get('status', '-')}")
+        lines.append(f"  Workflow Status: {e.get('workflow_status', '-')}")
+        lines.append(
+            "  SLA: "
+            + (
+                "SLA Breached – please review this DEM with the sponsor and IT lead."
+                if e.get("sla_breached")
+                else "SLA OK – project has been updated within the defined window."
+            )
+        )
+
+        # Last two notes, with dates if available
+        raw_notes = e.get("notes") or []
+        if raw_notes:
+            formatted_notes = [_format_note(n) for n in raw_notes]
+            last_two = formatted_notes[-2:]
+            lines.append("  Last Notes (most recent entries):")
             for n in last_two:
                 lines.append(f"    - {n}")
         else:
-            lines.append("  Last Notes:  (no notes registered)")
+            lines.append("  Last Notes: (no notes registered)")
+
         lines.append("")
     return "\n".join(lines)
 
 
 # ---------------- Auth & Views ----------------
-
-import json
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -244,7 +295,7 @@ def dems_page():
     return render_template("dem_manager.html")
 
 
-# ---------------- Chat & Files ----------------
+# ---------------- Chat & Files (main chat page) ----------------
 
 
 @app.route("/chat", methods=["POST"])
@@ -272,9 +323,9 @@ def chat():
     user_content = message
 
     if file_summaries:
-        user_content += "\n\n[Contexto de archivos adjuntos]\n"
+        user_content += "\n\n[Attached files summary]\n"
         for fsum in file_summaries:
-            fname = fsum.get("filename", "archivo")
+            fname = fsum.get("filename", "file")
             summ = fsum.get("summary", "")
             user_content += f"- {fname}: {summ}\n"
 
@@ -288,29 +339,30 @@ def chat():
         answer = completion.choices[0].message.content
         return jsonify({"reply": answer})
     except Exception as e:
-        _log(f"Error en OpenAI chat: {e}")
-        return jsonify({"error": "Error al llamar al modelo de IA."}), 500
+        _log(f"Error in OpenAI chat: {e}")
+        return jsonify({"error": "Error calling the AI model."}), 500
 
 
 @app.route("/upload", methods=["POST"])
 def upload():
+    """Upload generic files from the main chat and return short summaries."""
     maybe = require_auth()
     if maybe is not None:
         return jsonify({"error": "No autorizado"}), 401
 
     if "files" not in request.files:
-        return jsonify({"error": "No se enviaron archivos"}), 400
+        return jsonify({"error": "No files were sent."}), 400
 
     files = request.files.getlist("files")
     if not files:
-        return jsonify({"error": "No se enviaron archivos"}), 400
+        return jsonify({"error": "No files were sent."}), 400
 
     results = []
     for f in files:
-        filename = secure_filename(f.filename or "archivo")
+        filename = secure_filename(f.filename or "file")
         save_name = f"{int(time.time())}_{filename}"
         path = os.path.join(app.config["UPLOAD_FOLDER"], save_name)
-        _log(f"Guardando archivo en {path}")
+        _log(f"Saving uploaded file at {path}")
 
         f.save(path)
 
@@ -319,7 +371,7 @@ def upload():
             results.append(
                 {
                     "filename": filename,
-                    "summary": "No pude leer este archivo (formato no soportado o vacío).",
+                    "summary": "I could not read this file (unsupported or empty).",
                 }
             )
             continue
@@ -331,8 +383,9 @@ def upload():
                     {
                         "role": "user",
                         "content": (
-                            "Resume el siguiente documento en pocas frases, "
-                            "resaltando puntos clave para trabajo de análisis y gestión de proyectos:\n\n"
+                            "Summarize the following document in a few bullet points, "
+                            "highlighting key information useful for IT, business analysis "
+                            "and project follow-up:\n\n"
                             f"{text[:8000]}"
                         ),
                     }
@@ -340,8 +393,11 @@ def upload():
             )
             summary = completion.choices[0].message.content
         except Exception as e:
-            _log(f"Error resumiendo archivo: {e}")
-            summary = "No se pudo generar resumen automático, pero el archivo se recibió correctamente."
+            _log(f"Error summarizing file: {e}")
+            summary = (
+                "An automatic summary could not be generated, "
+                "but the file was uploaded correctly."
+            )
 
         results.append({"filename": filename, "summary": summary})
 
@@ -391,6 +447,7 @@ def create_dem():
         "current_owner": data.get("current_owner", "").strip(),
         "start_date": data.get("start_date", "").strip(),
         "notes": [],
+        "documents": [],  # multiple documents per DEM
         "doc_summary": "",
         "created_at": now_iso,
         "updated_at": now_iso,
@@ -399,7 +456,12 @@ def create_dem():
 
     initial_note = data.get("initial_note", "").strip() if "initial_note" in data else ""
     if initial_note:
-        dem["notes"].append(initial_note)
+        dem["notes"].append(
+            {
+                "text": initial_note,
+                "date": datetime.utcnow().strftime("%Y-%m-%d %H:%M"),
+            }
+        )
 
     dems = load_dems()
     dems.append(dem)
@@ -433,7 +495,14 @@ def add_dem_note(id):
 
     def updater(d):
         notes = d.get("notes") or []
-        notes.append(text)
+        if not isinstance(notes, list):
+            notes = []
+        notes.append(
+            {
+                "text": text,
+                "date": datetime.utcnow().strftime("%Y-%m-%d %H:%M"),
+            }
+        )
         d["notes"] = notes
 
     project = _update_dem(id, updater)
@@ -519,6 +588,7 @@ def delete_dem(id):
 
 @app.route("/api/dems/projects/<id>/attach", methods=["POST"])
 def attach_doc(id):
+    """Attach a document to a DEM, analyze it and store the summary."""
     maybe = require_auth()
     if maybe is not None:
         return jsonify({"error": "No autorizado"}), 401
@@ -534,7 +604,11 @@ def attach_doc(id):
 
     text = extract_text(path)
     if not text:
-        return jsonify({"error": "No pude leer este archivo para generar un resumen."}), 400
+        return jsonify(
+            {
+                "error": "I could not read this file to generate an executive summary."
+            }
+        ), 400
 
     summary = ""
     try:
@@ -544,9 +618,14 @@ def attach_doc(id):
                 {
                     "role": "user",
                     "content": (
-                        "Genera un resumen ejecutivo del siguiente contenido, "
-                        "resaltando objetivo, alcance, riesgos, responsables y próximos pasos. "
-                        "No menciones que eres un modelo de IA ni describas el proceso, solo entrega el resumen.\n\n"
+                        "Create an executive summary of the following document for a DEM "
+                        "(Digital Enhancement Management) portfolio. "
+                        "Focus on: business problem, scope, key requirements, risks, "
+                        "dependencies, recommended IT solutions (for example SAP S/4HANA "
+                        "or other enterprise systems), and clear next actions. "
+                        "Write in concise, professional English. "
+                        "Do NOT mention that this text was generated by any AI model and "
+                        "do not describe any internal technical process.\n\n"
                         f"{text[:8000]}"
                     ),
                 }
@@ -555,9 +634,25 @@ def attach_doc(id):
         summary = completion.choices[0].message.content
     except Exception as e:
         _log(f"Error generating doc summary: {e}")
-        summary = "No se pudo generar un resumen automático, pero el documento quedó adjunto a este DEM."
+        summary = (
+            "An automatic executive summary could not be generated, "
+            "but the document was attached to this DEM."
+        )
 
     def updater(d):
+        # Ensure documents list exists
+        docs = d.get("documents") or []
+        if not isinstance(docs, list):
+            docs = []
+        docs.append(
+            {
+                "filename": filename,
+                "summary": summary,
+                "date": datetime.utcnow().strftime("%Y-%m-%d %H:%M"),
+            }
+        )
+        d["documents"] = docs
+        # Keep last summary in doc_summary for current UI button
         d["doc_summary"] = summary
 
     project = _update_dem(id, updater)
@@ -624,7 +719,8 @@ def export_active_excel():
         bio,
         as_attachment=True,
         download_name="dems_active.xlsx",
-        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        mimetype="application/"
+        "vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
 
 
@@ -686,12 +782,14 @@ def export_archived_excel():
         bio,
         as_attachment=True,
         download_name="dems_archived.xlsx",
-        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        mimetype="application/"
+        "vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
 
 
 @app.route("/api/dems/report", methods=["POST"])
 def dem_report():
+    """Return the corporate portfolio text (used in the UI panel)."""
     maybe = require_auth()
     if maybe is not None:
         return jsonify({"error": "No autorizado"}), 401
@@ -703,6 +801,7 @@ def dem_report():
 
 @app.route("/api/dems/download/<fmt>", methods=["GET"])
 def dem_download(fmt):
+    """Download the portfolio report as TXT / DOCX / PDF."""
     maybe = require_auth()
     if maybe is not None:
         return jsonify({"error": "No autorizado"}), 401
@@ -713,6 +812,11 @@ def dem_download(fmt):
 
     dems = load_dems()
     text = build_portfolio_text(dems)
+
+    # First line is our dynamic title with date + Andres Villanueva
+    lines = text.split("\n")
+    title = lines[0] if lines else "Andres Villanueva DEMS Report"
+    body = "\n".join(lines[1:]) if len(lines) > 1 else ""
 
     if fmt == "txt":
         bio = io.BytesIO()
@@ -729,12 +833,13 @@ def dem_download(fmt):
         if Document is None:
             return jsonify({"error": "python-docx no está disponible."}), 500
         doc = Document()
-        doc.add_heading("DEMS Portfolio Report", level=1)
+        doc.add_heading(title, level=1)
         doc.add_paragraph(
-            "Resumen del estado actual de los proyectos DEM, incluyendo situación general, Workflow Status y Current Task Owner."
+            "This document summarizes the current status of DEM projects, "
+            "including overall situation, workflow status and task ownership."
         )
         doc.add_paragraph("")
-        for line in text.split("\n"):
+        for line in body.split("\n"):
             doc.add_paragraph(line)
 
         bio = io.BytesIO()
@@ -744,7 +849,10 @@ def dem_download(fmt):
             bio,
             as_attachment=True,
             download_name="dems_portfolio.docx",
-            mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            mimetype=(
+                "application/"
+                "vnd.openxmlformats-officedocument.wordprocessingml.document"
+            ),
         )
 
     if fmt == "pdf":
@@ -755,10 +863,12 @@ def dem_download(fmt):
         doc = SimpleDocTemplate(bio, pagesize=A4)
         styles = getSampleStyleSheet()
         story = []
-        story.append(Paragraph("DEMS Portfolio Report", styles["Title"]))
+        story.append(Paragraph(title, styles["Title"]))
         story.append(Spacer(1, 12))
-        for paragraph in text.split("\n\n"):
-            story.append(Paragraph(paragraph.replace("\n", "<br />"), styles["Normal"]))
+        for paragraph in body.split("\n\n"):
+            story.append(
+                Paragraph(paragraph.replace("\n", "<br />"), styles["Normal"])
+            )
             story.append(Spacer(1, 8))
         doc.build(story)
         bio.seek(0)
