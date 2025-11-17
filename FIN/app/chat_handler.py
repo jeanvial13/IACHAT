@@ -862,14 +862,22 @@ def export_archived_excel():
 
 @app.route("/api/dems/report", methods=["POST"])
 def dem_report():
-    """Return the corporate portfolio text (used in the UI panel)."""
+    """Return the corporate portfolio text (used in the UI panel), EXCLUDING archived DEMs."""
     maybe = require_auth()
     if maybe is not None:
         return jsonify({"error": "No autorizado"}), 401
 
+    # Load ALL projects
     dems = load_dems()
-    text = build_portfolio_text(dems)
+
+    # Filter ONLY non-archived projects
+    active_dems = [d for d in dems if not d.get("archived", False)]
+
+    # Build report ONLY with active projects
+    text = build_portfolio_text(active_dems)
+
     return jsonify({"report": text})
+
 
 
 @app.route("/api/dems/download/<fmt>", methods=["GET"])
