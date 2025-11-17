@@ -1,5 +1,7 @@
 flask
-python-docx
-PyPDF2
 openai
+python-docx
+pypdf
+openpyxl
+reportlab
 werkzeug
