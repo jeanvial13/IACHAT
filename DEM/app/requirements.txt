@@ -1,4 +1,6 @@
 flask
 openai
 werkzeug
-pypdf==5.0.0\npython-docx\nopenpyxl\n
+pypdf==5.0.0
+python-docx
+openpyxl
