@@ -1,94 +1,94 @@
 <!DOCTYPE html>
-<html lang=\"en\">
+<html lang="en">
 <head>
-  <meta charset=\"UTF-8\" />
-  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DEMS Manager</title>
-  <link rel=\"stylesheet\" href=\"/static/style.css\" />
+  <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-<div class=\"app\">
-  <aside class=\"sidebar\">
+<div class="app">
+  <aside class="sidebar">
     <h1>DEMS Manager</h1>
-    <button type=\"button\" onclick=\"window.location.href='/'\">← Back to Chat</button>
+    <button type="button" onclick="window.location.href='/'">← Back to Chat</button>
 
-    <div class=\"section\">
-      <p class=\"hint\">
+    <div class="section">
+      <p class="hint">
         Manage all your DEM projects, notes, documents and AI reports from here.
       </p>
     </div>
 
-    <div class=\"section small\">
-      <div class=\"quotes\">
+    <div class="section small">
+      <div class="quotes">
         <p>“Projects without updates die in silence. Keep them moving.”</p>
         <p>“Clarity, ownership, and action – every DEM needs all three.”</p>
       </div>
     </div>
   </aside>
 
-  <div class=\"holo-arrow\"></div>
+  <div class="holo-arrow"></div>
 
-  <main class=\"chat\">
-    <header class=\"chat-header\">
+  <main class="chat">
+    <header class="chat-header">
       <div>
         <strong>DEMS Portfolio</strong>
-        <span id=\"dems-notifications\" class=\"status-dot\">● Monitoring</span>
+        <span id="dems-notifications" class="status-dot">● Monitoring</span>
       </div>
-      <button id=\"back-chat-btn\" type=\"button\">Back to Chat</button>
+      <button id="back-chat-btn" type="button">Back to Chat</button>
     </header>
 
-    <div class=\"dems-layout\">
-      <div class=\"dems-toolbar\">
+    <div class="dems-layout">
+      <div class="dems-toolbar">
         <div>
-          <button id=\"create-project-btn\" type=\"button\">+ New DEM Project</button>
+          <button id="create-project-btn" type="button">+ New DEM Project</button>
         </div>
-        <div style=\"display:flex; gap:8px;\">
-          <button id=\"generate-report-btn\" type=\"button\">⚙ Generate AI Portfolio Report</button>
-          <button id=\"export-excel-btn\" type=\"button\">📊 Export to Excel</button>
+        <div style="display:flex; gap:8px;">
+          <button id="generate-report-btn" type="button">⚙ Generate AI Portfolio Report</button>
+          <button id="export-excel-btn" type="button">📊 Export to Excel</button>
         </div>
       </div>
 
-      <section id=\"dems-form-section\" class=\"dems-form-section hidden\">
+      <section id="dems-form-section" class="dems-form-section hidden">
         <h2>Create / Register DEM Project</h2>
-        <form id=\"dems-form\" class=\"dems-form\">
-          <div class=\"field\">
-            <label for=\"dem-name\">DEM Name</label>
-            <input id=\"dem-name\" type=\"text\" required />
+        <form id="dems-form" class="dems-form">
+          <div class="field">
+            <label for="dem-name">DEM Name</label>
+            <input id="dem-name" type="text" required />
           </div>
 
-          <div class=\"field\">
-            <label for=\"dem-sponsor\">Sponsor</label>
-            <input id=\"dem-sponsor\" type=\"text\" required />
+          <div class="field">
+            <label for="dem-sponsor">Sponsor</label>
+            <input id="dem-sponsor" type="text" required />
           </div>
 
-          <div class=\"field\">
-            <label for=\"dem-requester\">Requester</label>
-            <input id=\"dem-requester\" type=\"text\" required />
+          <div class="field">
+            <label for="dem-requester">Requester</label>
+            <input id="dem-requester" type="text" required />
           </div>
 
-          <div class=\"field\">
-            <label for=\"dem-ba\">BA Owner</label>
-            <input id=\"dem-ba\" type=\"text\" required />
+          <div class="field">
+            <label for="dem-ba">BA Owner</label>
+            <input id="dem-ba" type="text" required />
           </div>
 
-          <div class=\"field\">
-            <label for=\"dem-title\">Project Title</label>
-            <input id=\"dem-title\" type=\"text\" required />
+          <div class="field">
+            <label for="dem-title">Project Title</label>
+            <input id="dem-title" type="text" required />
           </div>
 
-          <div class=\"field\">
-            <label for=\"dem-change\">Change requested</label>
-            <textarea id=\"dem-change\" rows=\"2\"></textarea>
+          <div class="field">
+            <label for="dem-change">Change requested</label>
+            <textarea id="dem-change" rows="2"></textarea>
           </div>
 
-          <div class=\"field\">
-            <label for=\"dem-cc\">Cost Center</label>
-            <input id=\"dem-cc\" type=\"text\" />
+          <div class="field">
+            <label for="dem-cc">Cost Center</label>
+            <input id="dem-cc" type="text" />
           </div>
 
-          <div class=\"field\">
-            <label for=\"dem-status\">DEM Status</label>
-            <select id=\"dem-status\">
+          <div class="field">
+            <label for="dem-status">DEM Status</label>
+            <select id="dem-status">
               <option>Idea</option>
               <option>Intake</option>
               <option>Analysis</option>
@@ -101,9 +101,9 @@
             </select>
           </div>
 
-          <div class=\"field\">
-            <label for=\"dem-workflow-status\">Workflow Status</label>
-            <select id=\"dem-workflow-status\">
+          <div class="field">
+            <label for="dem-workflow-status">Workflow Status</label>
+            <select id="dem-workflow-status">
               <option>Intake</option>
               <option>Business Validation</option>
               <option>IT Analysis</option>
@@ -115,52 +115,52 @@
             </select>
           </div>
 
-          <div class=\"field\">
-            <label for=\"dem-owner\">Current Task Owner</label>
-            <input id=\"dem-owner\" type=\"text\" />
+          <div class="field">
+            <label for="dem-owner">Current Task Owner</label>
+            <input id="dem-owner" type="text" />
           </div>
 
-          <div class=\"field\">
-            <label for=\"dem-start\">Start Date</label>
-            <input id=\"dem-start\" type=\"date\" />
+          <div class="field">
+            <label for="dem-start">Start Date</label>
+            <input id="dem-start" type="date" />
           </div>
 
-          <div class=\"field\">
-            <label for=\"dem-initial-note\">Initial Update Note (optional)</label>
-            <textarea id=\"dem-initial-note\" rows=\"2\"
-              placeholder=\"Short context or first update for this DEM.\"></textarea>
+          <div class="field">
+            <label for="dem-initial-note">Initial Update Note (optional)</label>
+            <textarea id="dem-initial-note" rows="2"
+              placeholder="Short context or first update for this DEM."></textarea>
           </div>
 
-          <div class=\"field full-row\">
-            <button type=\"submit\">Save DEM</button>
-            <button type=\"button\" id=\"cancel-form-btn\" class=\"secondary\">Cancel</button>
+          <div class="field full-row">
+            <button type="submit">Save DEM</button>
+            <button type="button" id="cancel-form-btn" class="secondary">Cancel</button>
           </div>
         </form>
       </section>
 
-      <section class=\"dems-projects-section\">
+      <section class="dems-projects-section">
         <h2>Active DEM Projects</h2>
-        <div id=\"dems-projects\" class=\"dems-projects\"></div>
+        <div id="dems-projects" class="dems-projects"></div>
       </section>
 
-      <section class=\"dems-report-section\">
+      <section class="dems-report-section">
         <h2>AI Portfolio Report</h2>
-        <div id=\"dem-report-output\">Click 'Generate AI Portfolio Report' to generate a fresh report.</div>
+        <div id="dem-report-output">Click 'Generate AI Portfolio Report' to generate a fresh report.</div>
       </section>
     </div>
   </main>
 </div>
 
-<div class=\"particle\"></div>
-<div class=\"particle\"></div>
-<div class=\"particle\"></div>
-<div class=\"particle\"></div>
-<div class=\"particle\"></div>
-<div class=\"particle\"></div>
-<div class=\"particle\"></div>
-<div class=\"particle\"></div>
-<div class=\"particle\"></div>
-<div class=\"particle\"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
 
 <script>
   const backChatBtn = document.getElementById('back-chat-btn');
