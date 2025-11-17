@@ -1098,4 +1098,19 @@ body::after {
   background: #06b6d4;
   color: black;
 }
+.btn-cyber {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: radial-gradient(circle at top, #ef4444, #7f1d1d);
+  border: 1px solid #ef4444;
+  box-shadow: 0 0 12px #ef4444aa;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-cyber:hover {
+  box-shadow: 0 0 18px #ef4444;
+}
+
 
