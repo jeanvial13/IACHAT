@@ -108,6 +108,86 @@
       color: rgba(255, 255, 255, 0.6);
       font-style: italic;
     }
+
+    /* Caja superior para timeline con botones editar/eliminar */
+    .notes-timeline-box {
+      margin-top: 8px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: linear-gradient(90deg, rgba(25,10,35,0.95), rgba(60,10,70,0.95));
+      border: 1px solid rgba(255, 120, 200, 0.35);
+      font-size: 0.78rem;
+    }
+
+    .notes-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #ff8fb8;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .notes-icon {
+      font-size: 0.85rem;
+    }
+
+    .notes-timeline-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+
+    .note-item {
+      padding: 3px 0;
+      border-bottom: 1px dashed rgba(255,255,255,0.12);
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .note-item:last-child {
+      border-bottom: none;
+    }
+
+    .note-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .edit-note-btn,
+    .delete-note-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.25);
+      padding: 2px 6px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      transition: 0.15s ease-out;
+    }
+
+    .edit-note-btn:hover {
+      background: #00ffe7;
+      color: #000;
+      box-shadow: 0 0 10px #00fff0;
+    }
+
+    .delete-note-btn {
+      background: rgba(255,0,80,0.25);
+    }
+
+    .delete-note-btn:hover {
+      background: #ff003c;
+      color: #fff;
+      box-shadow: 0 0 10px #ff003c;
+    }
   </style>
 </head>
 
@@ -381,7 +461,7 @@
       if (data.report) {
         reportOutput.textContent = data.report;
       } else {
-        reportOutput.textContent = 'Error generating report: ' + (data.error || 'Unknown error');
+        reportOutput.textContent = 'Error generating report: ' + (data.error || 'Unknown error'));
       }
     } catch (err) {
       reportOutput.textContent = 'Connection error generating report: ' + err;
@@ -448,7 +528,13 @@
         p.workflow_status,
         p.current_owner,
         p.last_note,
-        (p.notes || []).join(' ')
+        (p.notes || []).map(n => {
+          if (typeof n === 'string') return n;
+          if (typeof n === 'object' && n !== null) {
+            return `[${n.date || ''}] ${n.text || ''}`;
+          }
+          return '';
+        }).join(' ')
       ].join(' ').toLowerCase();
       return fields.includes(searchText);
     });
@@ -537,45 +623,66 @@
       `;
       card.appendChild(lastNote);
 
-      // ----- NOTES TIMELINE (NEWEST FIRST) -----
-if (p.notes && p.notes.length > 0) {
-  const notesBox = document.createElement("div");
-  notesBox.className = "notes-timeline-box";
+      // ----- NOTES TIMELINE (NEWEST FIRST) con EDITAR/ELIMINAR -----
+      if (p.notes && p.notes.length > 0) {
+        const notesBox = document.createElement("div");
+        notesBox.className = "notes-timeline-box";
 
-  notesBox.innerHTML = `
-    <div class="notes-title">
-      <span class="notes-icon">✦</span>
-      NOTES TIMELINE (NEWEST FIRST)
-    </div>
-  `;
+        notesBox.innerHTML = `
+          <div class="notes-title">
+            <span class="notes-icon">✦</span>
+            NOTES TIMELINE (NEWEST FIRST)
+          </div>
+        `;
 
-  const ul = document.createElement("ul");
-  ul.className = "notes-timeline-list";
+        const ulTop = document.createElement("ul");
+        ulTop.className = "notes-timeline-list";
 
-  // newest first
-  [...p.notes].reverse().forEach(n => {
-    const li = document.createElement("li");
-    li.className = "note-item";
+        const notesArray = p.notes || [];
 
-    let textLine = "";
+        [...notesArray].reverse().forEach((n, idx) => {
+          const li = document.createElement("li");
+          li.className = "note-item";
 
-    // If it's a string note (older format)
-    if (typeof n === "string") {
-      textLine = n;
-    }
-    // If note stored as object {text, date}
-    else if (typeof n === "object") {
-      textLine = `[${n.date}] — ${n.text}`;
-    }
+          let textLine = "";
+          let storedText = "";
+          let storedDate = "";
 
-    li.textContent = textLine;
-    ul.appendChild(li);
-  });
+          if (typeof n === "string") {
+            textLine = n;
+            storedText = n;
+            storedDate = "";
+          } else if (typeof n === "object" && n !== null) {
+            textLine = `[${n.date || ''}] — ${n.text || ''}`;
+            storedText = n.text || "";
+            storedDate = n.date || "";
+          }
 
-  notesBox.appendChild(ul);
-  card.appendChild(notesBox);
-}
+          // Índice real en el arreglo original (no invertido)
+          const originalIndex = notesArray.length - 1 - idx;
 
+          li.innerHTML = `
+            <span>${textLine}</span>
+            <div class="note-actions">
+              <button type="button" class="edit-note-btn" title="Edit note">✎</button>
+              <button type="button" class="delete-note-btn" title="Delete note">🗑</button>
+            </div>
+          `;
+
+          li.querySelector(".edit-note-btn").addEventListener("click", () => {
+            editNote(p.id, originalIndex, storedText, storedDate);
+          });
+
+          li.querySelector(".delete-note-btn").addEventListener("click", () => {
+            deleteNote(p.id, originalIndex);
+          });
+
+          ulTop.appendChild(li);
+        });
+
+        notesBox.appendChild(ulTop);
+        card.appendChild(notesBox);
+      }
 
       // Panel con TODAS las notas en orden cronológico inverso (más nuevas arriba)
       const notesPanel = document.createElement('div');
@@ -590,7 +697,15 @@ if (p.notes && p.notes.length > 0) {
         ul.className = 'dem-notes-list';
         [...p.notes].slice().reverse().forEach(n => {
           const li = document.createElement('li');
-          li.textContent = n;
+
+          if (typeof n === 'string') {
+            li.textContent = n;
+          } else if (typeof n === 'object' && n !== null) {
+            li.textContent = `[${n.date || ''}] — ${n.text || ''}`;
+          } else {
+            li.textContent = String(n);
+          }
+
           ul.appendChild(li);
         });
         notesPanel.appendChild(ul);
@@ -708,6 +823,56 @@ if (p.notes && p.notes.length > 0) {
       }
     } catch (err) {
       alert("Connection error saving note: " + err);
+    }
+  }
+
+  // ---- EDITAR NOTA ----
+  async function editNote(projectId, noteIndex, oldText, oldDate) {
+    const base = oldDate ? oldText : oldText;
+    const newText = prompt("Edit note:", base);
+    if (!newText || newText.trim() === base.trim()) return;
+
+    try {
+      const res = await fetch(`/api/dems/projects/${projectId}/note/edit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ index: noteIndex, text: newText })
+      });
+
+      const data = await res.json();
+
+      if (data.project) {
+        replaceProject(data.project);
+        renderAll();
+      } else {
+        alert("Error editing note: " + (data.error || "Unknown"));
+      }
+    } catch (err) {
+      alert("Connection error editing note: " + err);
+    }
+  }
+
+  // ---- ELIMINAR NOTA ----
+  async function deleteNote(projectId, noteIndex) {
+    if (!confirm("Delete this note?")) return;
+
+    try {
+      const res = await fetch(`/api/dems/projects/${projectId}/note/delete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ index: noteIndex })
+      });
+
+      const data = await res.json();
+
+      if (data.project) {
+        replaceProject(data.project);
+        renderAll();
+      } else {
+        alert("Error deleting note: " + (data.error || "Unknown"));
+      }
+    } catch (err) {
+      alert("Connection error deleting note: " + err);
     }
   }
 
