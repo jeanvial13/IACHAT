@@ -5,6 +5,110 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Project Manager</title>
   <link rel="stylesheet" href="/static/style.css" />
+
+  <!-- Extra inline styles for neon animations & notes panel -->
+  <style>
+    /* Neon pop for modals */
+    .modal .modal-content.neon-pop {
+      animation: neonPop 0.35s ease-out;
+    }
+
+    @keyframes neonPop {
+      0% {
+        transform: scale(0.85);
+        opacity: 0;
+        box-shadow: 0 0 0px rgba(255, 51, 102, 0.0);
+      }
+      60% {
+        transform: scale(1.03);
+        opacity: 1;
+        box-shadow: 0 0 24px rgba(255, 51, 102, 0.65);
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+        box-shadow: 0 0 12px rgba(255, 51, 102, 0.45);
+      }
+    }
+
+    /* Icono de notas recientes */
+    .dem-note-dot {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 6px;
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: radial-gradient(circle, #ff5c9f 0%, #ff003c 45%, transparent 70%);
+      box-shadow: 0 0 10px rgba(255, 0, 80, 0.9);
+      animation: pulseGlow 1.4s ease-in-out infinite;
+    }
+
+    @keyframes pulseGlow {
+      0% {
+        transform: scale(0.9);
+        box-shadow: 0 0 6px rgba(255, 0, 80, 0.7);
+      }
+      50% {
+        transform: scale(1.2);
+        box-shadow: 0 0 18px rgba(255, 0, 80, 1);
+      }
+      100% {
+        transform: scale(0.9);
+        box-shadow: 0 0 6px rgba(255, 0, 80, 0.7);
+      }
+    }
+
+    /* Panel de notas (timeline) */
+    .dem-notes-panel {
+      margin-top: 4px;
+      padding: 6px 10px;
+      border-radius: 10px;
+      background: linear-gradient(90deg, rgba(15, 15, 25, 0.9), rgba(40, 10, 50, 0.9));
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      max-height: 140px;
+      overflow-y: auto;
+      font-size: 0.78rem;
+    }
+
+    .dem-notes-panel h4 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #ff8fb8;
+      margin: 0 0 4px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dem-notes-panel h4 span.icon {
+      font-size: 0.85rem;
+    }
+
+    .dem-notes-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .dem-notes-list li {
+      padding: 3px 0;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+      line-height: 1.3;
+    }
+
+    .dem-notes-list li:last-child {
+      border-bottom: none;
+    }
+
+    .dem-note-empty {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.6);
+      font-style: italic;
+    }
+  </style>
 </head>
 
 <!-- MODAL: New / Edit Project -->
@@ -206,6 +310,15 @@
     // Show modal
     modal.classList.remove("hidden");
 
+    // Neon animation
+    const content = modal.querySelector(".modal-content");
+    if (content) {
+      content.classList.add("neon-pop");
+      content.addEventListener("animationend", () => {
+        content.classList.remove("neon-pop");
+      }, { once: true });
+    }
+
     // Fill with existing data or empty
     form.reset();
     if (existing) {
@@ -235,7 +348,7 @@
 
   // ----- Create project -----
   createProjectBtn.addEventListener('click', async () => {
-    const payload = await openProjectForm(null);   // 👈 AQUÍ FALTABA EL await
+    const payload = await openProjectForm(null);
     if (!payload) return;
     try {
       const res = await fetch('/api/dems/projects', {
@@ -388,12 +501,17 @@
       header.innerHTML = `
         <div>
           <h3>${p.name || '(No name)'}</h3>
-          <p class="dem-subtitle">${p.title || ''}</p>
+          <p class="dem-subtitle">
+            ${p.title || ''}
+            ${p.last_note ? '<span class="dem-note-dot" title="Recent updates"></span>' : ''}
+          </p>
         </div>
         <div class="dem-tags">
           <span class="dem-tag primary">${p.status || 'N/A'}</span>
           <span class="dem-tag">${p.workflow_status || ''}</span>
-          <span class="dem-tag ${p.sla_breached ? 'sla-breached' : 'sla-ok'}">${p.sla_breached ? 'SLA Breached' : 'SLA OK'}</span>
+          <span class="dem-tag ${p.sla_breached ? 'sla-breached' : 'sla-ok'}">
+            ${p.sla_breached ? 'SLA Breached' : 'SLA OK'}
+          </span>
         </div>
       `;
       card.appendChild(header);
@@ -418,6 +536,32 @@
         <p>${p.last_note || 'No notes yet.'}</p>
       `;
       card.appendChild(lastNote);
+
+      // Panel con TODAS las notas en orden cronológico inverso (más nuevas arriba)
+      const notesPanel = document.createElement('div');
+      notesPanel.className = 'dem-notes-panel';
+
+      const notesHeader = document.createElement('h4');
+      notesHeader.innerHTML = '<span class="icon">✦</span> Notes timeline (newest first)';
+      notesPanel.appendChild(notesHeader);
+
+      if (p.notes && p.notes.length) {
+        const ul = document.createElement('ul');
+        ul.className = 'dem-notes-list';
+        [...p.notes].slice().reverse().forEach(n => {
+          const li = document.createElement('li');
+          li.textContent = n;
+          ul.appendChild(li);
+        });
+        notesPanel.appendChild(ul);
+      } else {
+        const empty = document.createElement('div');
+        empty.className = 'dem-note-empty';
+        empty.textContent = 'No notes registered for this DEM yet.';
+        notesPanel.appendChild(empty);
+      }
+
+      card.appendChild(notesPanel);
 
       const banner = document.createElement('div');
       banner.className = 'dem-sla-banner ' + (p.sla_breached ? 'breached' : 'ok');
@@ -501,41 +645,36 @@
   }
 
   async function addNote(projectId) {
+    const text = prompt("Enter your update note:");
+    if (!text) return;
 
-  // Nuevo modal tipo textarea
-  const text = prompt("Enter your update note:");
+    const timestamp = new Date().toISOString().slice(0,16).replace("T"," ");
+    const notePayload = `[${timestamp}] — ${text}`;
 
-  if (!text) return;
+    try {
+      const res = await fetch(`/api/dems/projects/${projectId}/note`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ text: notePayload })
+      });
 
-  const timestamp = new Date().toISOString().slice(0,16).replace("T"," ");
+      const data = await res.json();
 
-  const notePayload = `[${timestamp}] — ${text}`;
-
-  try {
-    const res = await fetch(`/api/dems/projects/${projectId}/note`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ text: notePayload })
-    });
-
-    const data = await res.json();
-
-    if (data.project) {
-      replaceProject(data.project);
-      renderAll();
-    } else {
-      alert("Error saving note: " + (data.error || "Unknown"));
+      if (data.project) {
+        replaceProject(data.project);
+        renderAll();
+      } else {
+        alert("Error saving note: " + (data.error || "Unknown"));
+      }
+    } catch (err) {
+      alert("Connection error saving note: " + err);
     }
-  } catch (err) {
-    alert("Connection error saving note: " + err);
   }
-}
-
 
   async function editProject(projectId) {
     const project = [...activeProjects, ...archivedProjects].find(p => p.id === projectId);
     if (!project) return;
-    const updated = await openProjectForm(project);  // 👈 AQUÍ TAMBIÉN FALTABA await
+    const updated = await openProjectForm(project);
     if (!updated) return;
     try {
       const res = await fetch(`/api/dems/projects/${projectId}/update`, {
