@@ -537,6 +537,46 @@
       `;
       card.appendChild(lastNote);
 
+      // ----- NOTES TIMELINE (NEWEST FIRST) -----
+if (p.notes && p.notes.length > 0) {
+  const notesBox = document.createElement("div");
+  notesBox.className = "notes-timeline-box";
+
+  notesBox.innerHTML = `
+    <div class="notes-title">
+      <span class="notes-icon">✦</span>
+      NOTES TIMELINE (NEWEST FIRST)
+    </div>
+  `;
+
+  const ul = document.createElement("ul");
+  ul.className = "notes-timeline-list";
+
+  // newest first
+  [...p.notes].reverse().forEach(n => {
+    const li = document.createElement("li");
+    li.className = "note-item";
+
+    let textLine = "";
+
+    // If it's a string note (older format)
+    if (typeof n === "string") {
+      textLine = n;
+    }
+    // If note stored as object {text, date}
+    else if (typeof n === "object") {
+      textLine = `[${n.date}] — ${n.text}`;
+    }
+
+    li.textContent = textLine;
+    ul.appendChild(li);
+  });
+
+  notesBox.appendChild(ul);
+  card.appendChild(notesBox);
+}
+
+
       // Panel con TODAS las notas en orden cronológico inverso (más nuevas arriba)
       const notesPanel = document.createElement('div');
       notesPanel.className = 'dem-notes-panel';
