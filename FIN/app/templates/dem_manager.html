@@ -6,6 +6,81 @@
   <title>Project Manager</title>
   <link rel="stylesheet" href="/static/style.css" />
 </head>
+  <!-- MODAL: New / Edit Project -->
+<div id="project-modal" class="modal hidden">
+  <div class="modal-content">
+    <h2 id="modal-title">New Project</h2>
+
+    <form id="project-form">
+      <div class="form-grid">
+
+        <label>Project Name
+          <input type="text" name="name" required />
+        </label>
+
+        <label>Sponsor
+          <input type="text" name="sponsor" />
+        </label>
+
+        <label>Requester
+          <input type="text" name="requester" />
+        </label>
+
+        <label>BA Owner
+          <input type="text" name="ba_owner" />
+        </label>
+
+        <label>Project Title
+          <input type="text" name="title" />
+        </label>
+
+        <label>Change Requested
+          <input type="text" name="change_request" />
+        </label>
+
+        <label>Cost Center
+          <input type="text" name="cost_center" />
+        </label>
+
+        <label>Status
+          <select name="status">
+            <option>Idea</option>
+            <option>Analysis</option>
+            <option>Solution Design</option>
+            <option>Build</option>
+            <option>UAT</option>
+            <option>Go-Live</option>
+          </select>
+        </label>
+
+        <label>Workflow Status
+          <select name="workflow_status">
+            <option>Intake</option>
+            <option>In Progress</option>
+            <option>On Hold</option>
+            <option>Waiting Approval</option>
+            <option>Completed</option>
+          </select>
+        </label>
+
+        <label>Current Task Owner
+          <input type="text" name="current_owner" />
+        </label>
+
+        <label>Start Date
+          <input type="date" name="start_date" />
+        </label>
+
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" id="cancel-modal">Cancel</button>
+        <button type="submit" id="save-project">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <body>
 <div class="app">
   <aside class="sidebar">
