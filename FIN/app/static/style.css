@@ -1164,5 +1164,55 @@ body::after {
     border: none;
     cursor: pointer;
 }
+.notes-timeline-box {
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(120, 0, 120, 0.25);
+  border: 1px solid rgba(255, 0, 200, 0.3);
+  backdrop-filter: blur(4px);
+}
+
+.notes-title {
+  font-weight: bold;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #ff8bff;
+}
+
+.notes-icon {
+  color: #ff26ff;
+  font-size: 1.2em;
+}
+
+.notes-timeline-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.note-item {
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  color: #e8e8e8;
+  font-size: 0.9em;
+}
+
+.note-item:last-child {
+  border-bottom: none;
+}
+
+/* Fix: Keep action buttons visible */
+.dem-actions {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  z-index: 3;
+  position: relative;
+}
+
 
 
