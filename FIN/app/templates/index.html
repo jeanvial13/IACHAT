@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Andres IA</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <h1>IA Andres</h1>
+    <button id="new-chat-btn">+ Nuevo chat</button>
+
+    <div class="section">
+      <label for="model-select">Modelo</label>
+      <select id="model-select">
+        <option value="gpt-4o-mini">gpt-4o-mini</option>
+        <option value="gpt-4o">gpt-4o</option>
+      </select>
+    </div>
+
+    <div class="section">
+      <button id="dems-btn" type="button">📂 Project Manager</button>
+    </div>
+
+    <div class="section">
+      <label>Adjuntar archivos</label>
+      <div class="file-upload-wrapper">
+        <button type="button" class="file-upload-btn">📁 Seleccionar archivo</button>
+        <input id="file-input" type="file" multiple />
+      </div>
+      <div id="selected-file-name">Ningún archivo seleccionado</div>
+      <button id="upload-btn">Subir &amp; resumir</button>
+      <div id="files-status" class="files-status"></div>
+    </div>
+
+    <div class="section">
+      <a href="https://platform.openai.com/usage" target="_blank" class="token-usage-btn">
+        ⚡ Consumo de Tokens OpenAI
+      </a>
+    </div>
+
+    <div class="section small">
+      <div class="quotes">
+        <p>“Hazlo por los que ya no están…”</p>
+        <p>“No necesito suerte. Solo necesito avanzar.”</p>
+        <p>“Si el camino es peligroso, vale la pena.”</p>
+        <p>“No vine a ser uno más. Vine a romper la línea.”</p>
+      </div>
+    </div>
+  </aside>
+
+  <div class="holo-arrow"></div>
+
+  <main class="chat">
+    <header class="chat-header">
+      <div>
+        <strong>Chat actual</strong>
+        <span id="status" class="status-dot">● Conectado</span>
+      </div>
+      <div class="chat-header-actions">
+        <button id="clear-btn">Limpiar chat</button>
+        <button id="exit-btn" type="button">Exit</button>
+      </div>
+    </header>
+
+    <div id="chat-log" class="chat-log"></div>
+
+    <form id="chat-form" class="chat-input-area">
+      <textarea id="chat-input" placeholder="Escribe tu mensaje aquí..." rows="1"></textarea>
+      <button type="submit" id="send-btn">Enviar</button>
+    </form>
+  </main>
+</div>
+
+<!-- Partículas neon amarillas -->
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+
+<script>
+  const chatLog = document.getElementById("chat-log");
+  const input = document.getElementById("chat-input");
+  const form = document.getElementById("chat-form");
+  const clearBtn = document.getElementById("clear-btn");
+  const newChatBtn = document.getElementById("new-chat-btn");
+  const modelSelect = document.getElementById("model-select");
+  const fileInput = document.getElementById("file-input");
+  const uploadBtn = document.getElementById("upload-btn");
+  const filesStatus = document.getElementById("files-status");
+  const fileNameText = document.getElementById("selected-file-name");
+
+  let history = [];
+  let fileSummaries = [];
+
+  function appendMessage(role, text) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "msg " + role;
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.innerText = text;
+
+    wrapper.appendChild(bubble);
+    chatLog.appendChild(wrapper);
+    chatLog.scrollTop = chatLog.scrollHeight;
+  }
+
+  async function sendMessage(message) {
+    if (!message) return;
+    appendMessage("user", message);
+    history.push({ role: "user", content: message });
+
+    appendMessage("assistant", "Pensando...");
+    const thinkingNode = chatLog.lastChild;
+
+    try {
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message,
+          history,
+          model: modelSelect.value,
+          file_summaries: fileSummaries
+        })
+      });
+
+      const data = await res.json();
+      chatLog.removeChild(thinkingNode);
+
+      if (data.reply) {
+        appendMessage("assistant", data.reply);
+        history.push({ role: "assistant", content: data.reply });
+      } else {
+        appendMessage("assistant", "⚠️ " + (data.error || "Error desconocido"));
+      }
+    } catch (err) {
+      chatLog.removeChild(thinkingNode);
+      appendMessage("assistant", "⚠️ Error de conexión: " + err);
+    }
+  }
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = "";
+    sendMessage(text);
+  });
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      form.dispatchEvent(new Event("submit"));
+    }
+  });
+
+  clearBtn.addEventListener("click", () => {
+    history = [];
+    fileSummaries = [];
+    chatLog.innerHTML = "";
+  });
+
+  newChatBtn.addEventListener("click", () => {
+    history = [];
+    fileSummaries = [];
+    chatLog.innerHTML = "";
+    appendMessage("assistant", "Nuevo chat iniciado. ¿En qué te ayudo?");
+  });
+
+  uploadBtn.addEventListener("click", async () => {
+    const files = fileInput.files;
+    if (!files || !files.length) {
+      filesStatus.innerText = "Selecciona uno o más archivos primero.";
+      return;
+    }
+    filesStatus.innerText = "Subiendo y resumiendo archivos...";
+    const fd = new FormData();
+    for (const f of files) {
+      fd.append("files", f);
+    }
+    try {
+      const res = await fetch("/upload", {
+        method: "POST",
+        body: fd
+      });
+      const data = await res.json();
+      if (data.files) {
+        fileSummaries = data.files;
+        filesStatus.innerText = "Archivos listos. El contexto se usará en tus próximas preguntas.";
+        data.files.forEach(f => {
+          appendMessage("assistant", "Resumen de " + f.filename + "\n" + f.summary);
+          history.push({ role: "assistant", content: "Resumen de " + f.filename + "\n" + f.summary });
+        });
+      } else {
+        filesStatus.innerText = "Error: " + (data.error || "No se pudieron procesar los archivos.");
+      }
+    } catch (err) {
+      filesStatus.innerText = "Error subiendo archivos: " + err;
+    }
+  });
+
+  // Mostrar mensaje de bienvenida
+  appendMessage("assistant", "¡Bienvenido, choom… prepárate! Las leyendas no nacen… se ejecutan. Iniciando protocolo Andres.");
+
+  // Mostrar nombre de archivos seleccionados
+  fileInput.addEventListener("change", () => {
+    if (fileInput.files.length === 0) {
+      fileNameText.innerText = "Ningún archivo seleccionado";
+    } else if (fileInput.files.length === 1) {
+      fileNameText.innerText = fileInput.files[0].name;
+    } else {
+      fileNameText.innerText = `${fileInput.files.length} archivos seleccionados`;
+    }
+  });
+
+  const demsBtn = document.getElementById("dems-btn");
+  const exitBtn = document.getElementById("exit-btn");
+
+  if (demsBtn) {
+    demsBtn.addEventListener("click", () => {
+      window.location.href = "/dems";
+    });
+  }
+
+  if (exitBtn) {
+    exitBtn.addEventListener("click", () => {
+      window.location.href = "/logout";
+    });
+  }
+
+  // Ghost trail FX
+  document.addEventListener("mousemove", (e) => {
+    const g = document.createElement("div");
+    g.classList.add("ghost");
+    g.style.left = e.pageX + "px";
+    g.style.top = e.pageY + "px";
+    document.body.appendChild(g);
+    setTimeout(() => g.remove(), 600);
+  });
+</script>
+</body>
+</html>

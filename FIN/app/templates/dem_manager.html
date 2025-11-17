@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Manager</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <h1>Project Manager</h1>
+    <button type="button" onclick="window.location.href='/'">← Back to Chat</button>
+
+    <div class="section">
+      <p class="hint">
+        Gestiona todos tus DEM / proyectos con contexto, notas, SLA y documentos en un solo lugar.
+      </p>
+    </div>
+
+    <div class="section small">
+      <div class="quotes">
+        <p>“Projects gain power when they stay visible.”</p>
+        <p>“Clarity, ownership and follow‑up keep change alive.”</p>
+      </div>
+    </div>
+  </aside>
+
+  <div class="holo-arrow"></div>
+
+  <main class="chat">
+    <header class="chat-header">
+      <div>
+        <strong>Project Manager Portfolio</strong>
+        <span id="dems-notifications" class="status-dot">● Monitoring</span>
+      </div>
+    </header>
+
+    <div class="dems-layout">
+      <div class="dems-toolbar">
+        <div class="dems-toolbar-top">
+          <div style="display:flex; gap:8px; align-items:center;">
+            <button id="create-project-btn" type="button">+ New Project</button>
+            <div class="dems-tabs">
+              <button type="button" class="dems-tab active" data-tab="active">Active DEMs</button>
+              <button type="button" class="dems-tab" data-tab="archived">Archived DEMs</button>
+            </div>
+          </div>
+          <div class="dems-download-group">
+            <button id="generate-report-btn" type="button">📄 Generate Portfolio Report</button>
+            <button id="download-txt-btn" type="button">⬇ TXT</button>
+            <button id="download-docx-btn" type="button">⬇ DOCX</button>
+            <button id="download-pdf-btn" type="button">⬇ PDF</button>
+          </div>
+        </div>
+
+        <div class="dems-search-row">
+          <input id="dems-search" type="text" placeholder="Search DEMs by name, owner, status, notes, etc..." />
+        </div>
+
+        <div id="dem-chip-bar" class="dem-chip-bar"></div>
+      </div>
+
+      <section class="dems-projects-section">
+        <h2>Projects</h2>
+        <div id="dems-projects" class="dems-projects"></div>
+      </section>
+
+      <section class="dems-report-section">
+        <h2>Portfolio Report</h2>
+        <div id="dem-report-output">Click "Generate Portfolio Report" to build a fresh executive summary.</div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+
+<script>
+  const backChatBtn = null; // we already have the Back button in the sidebar
+  const createProjectBtn = document.getElementById('create-project-btn');
+  const generateReportBtn = document.getElementById('generate-report-btn');
+  const downloadTxtBtn = document.getElementById('download-txt-btn');
+  const downloadDocxBtn = document.getElementById('download-docx-btn');
+  const downloadPdfBtn = document.getElementById('download-pdf-btn');
+  const projectsContainer = document.getElementById('dems-projects');
+  const notif = document.getElementById('dems-notifications');
+  const reportOutput = document.getElementById('dem-report-output');
+  const searchInput = document.getElementById('dems-search');
+  const chipBar = document.getElementById('dem-chip-bar');
+  const tabs = document.querySelectorAll('.dems-tab');
+
+  let activeProjects = [];
+  let archivedProjects = [];
+  let currentTab = 'active';
+  let editingProjectId = null;
+  let searchText = '';
+
+  // ----- Simple modal form using prompt-style (lightweight) -----
+  function openProjectForm(existing) {
+    const base = existing || {};
+    const name = prompt('DEM / Project name:', base.name || '');
+    if (!name) return null;
+    const sponsor = prompt('Sponsor:', base.sponsor || '');
+    const requester = prompt('Requester:', base.requester || '');
+    const ba_owner = prompt('BA Owner:', base.ba_owner || '');
+    const title = prompt('Project Title:', base.title || '');
+    const change_request = prompt('Change requested (short description):', base.change_request || '');
+    const cost_center = prompt('Cost Center:', base.cost_center || '');
+    const status = prompt('DEM Status (Idea, Analysis, etc.):', base.status || 'Idea');
+    const workflow_status = prompt('Workflow Status:', base.workflow_status || 'Intake');
+    const current_owner = prompt('Current Task Owner:', base.current_owner || '');
+    const start_date = prompt('Start Date (YYYY-MM-DD):', base.start_date || '');
+
+    return {
+      name,
+      sponsor,
+      requester,
+      ba_owner,
+      title,
+      change_request,
+      cost_center,
+      status,
+      workflow_status,
+      current_owner,
+      start_date
+    };
+  }
+
+  createProjectBtn.addEventListener('click', async () => {
+    const payload = openProjectForm(null);
+    if (!payload) return;
+    try {
+      const res = await fetch('/api/dems/projects', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.project) {
+        activeProjects.push(data.project);
+        renderAll();
+      } else {
+        alert('Error creating project: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Connection error creating DEM: ' + err);
+    }
+  });
+
+  generateReportBtn.addEventListener('click', async () => {
+    reportOutput.textContent = 'Generating report...';
+    try {
+      const res = await fetch('/api/dems/report', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({})
+      });
+      const data = await res.json();
+      if (data.report) {
+        reportOutput.textContent = data.report;
+      } else {
+        reportOutput.textContent = 'Error generating report: ' + (data.error || 'Unknown error');
+      }
+    } catch (err) {
+      reportOutput.textContent = 'Connection error generating report: ' + err;
+    }
+  });
+
+  async function downloadReport(format) {
+    try {
+      const res = await fetch('/api/dems/download/' + format);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert('Error downloading report: ' + (data.error || res.statusText));
+        return;
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'dems_portfolio.' + format;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Connection error downloading report: ' + err);
+    }
+  }
+
+  downloadTxtBtn.addEventListener('click', () => downloadReport('txt'));
+  downloadDocxBtn.addEventListener('click', () => downloadReport('docx'));
+  downloadPdfBtn.addEventListener('click', () => downloadReport('pdf'));
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentTab = tab.dataset.tab;
+      renderAll();
+    });
+  });
+
+  searchInput.addEventListener('input', () => {
+    searchText = searchInput.value.toLowerCase();
+    renderAll();
+  });
+
+  function getCurrentList() {
+    return currentTab === 'active' ? activeProjects : archivedProjects;
+  }
+
+  function filterBySearch(list) {
+    if (!searchText) return list;
+    return list.filter(p => {
+      const fields = [
+        p.name,
+        p.title,
+        p.sponsor,
+        p.requester,
+        p.ba_owner,
+        p.cost_center,
+        p.status,
+        p.workflow_status,
+        p.current_owner,
+        p.last_note,
+        (p.notes || []).join(' ')
+      ].join(' ').toLowerCase();
+      return fields.includes(searchText);
+    });
+  }
+
+  function buildChips(list) {
+    chipBar.innerHTML = '';
+    if (!list.length) return;
+    list.forEach(p => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'dem-chip';
+      chip.textContent = p.name || '(No name)';
+      chip.dataset.id = p.id;
+      chip.addEventListener('click', () => {
+        const card = document.querySelector('.dem-card[data-id="' + p.id + '"]');
+        if (card) {
+          document.querySelectorAll('.dem-chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+      chipBar.appendChild(chip);
+    });
+  }
+
+  function renderAll() {
+    const list = filterBySearch(getCurrentList());
+    buildChips(list);
+    renderProjects(list);
+    updateNotif();
+  }
+
+  function renderProjects(list) {
+    projectsContainer.innerHTML = '';
+    if (!list.length) {
+      projectsContainer.innerHTML = "<p class='hint'>No projects in this view.</p>";
+      return;
+    }
+
+    list.forEach(p => {
+      const card = document.createElement('article');
+      card.className = 'dem-card';
+      card.dataset.id = p.id;
+      if (p.sla_breached) card.classList.add('sla-breached');
+      if (p.archived) card.classList.add('archived');
+
+      const header = document.createElement('div');
+      header.className = 'dem-card-header';
+      header.innerHTML = `
+        <div>
+          <h3>${p.name || '(No name)'}</h3>
+          <p class="dem-subtitle">${p.title || ''}</p>
+        </div>
+        <div class="dem-tags">
+          <span class="dem-tag primary">${p.status || 'N/A'}</span>
+          <span class="dem-tag">${p.workflow_status || ''}</span>
+          <span class="dem-tag ${p.sla_breached ? 'sla-breached' : 'sla-ok'}">${p.sla_breached ? 'SLA Breached' : 'SLA OK'}</span>
+        </div>
+      `;
+      card.appendChild(header);
+
+      const meta = document.createElement('div');
+      meta.className = 'dem-meta';
+      meta.innerHTML = `
+        <p><strong>Sponsor:</strong> ${p.sponsor || '-'}</p>
+        <p><strong>Requester:</strong> ${p.requester || '-'}</p>
+        <p><strong>BA Owner:</strong> ${p.ba_owner || '-'}</p>
+        <p><strong>Current Task Owner:</strong> ${p.current_owner || '-'}</p>
+        <p><strong>Cost Center:</strong> ${p.cost_center || '-'}</p>
+        <p><strong>Start Date:</strong> ${p.start_date || '-'}</p>
+        <p><strong>Duration (days):</strong> ${p.duration_days ?? '-'}</p>
+      `;
+      card.appendChild(meta);
+
+      const lastNote = document.createElement('div');
+      lastNote.className = 'dem-last-note';
+      lastNote.innerHTML = `
+        <strong>Last Note:</strong>
+        <p>${p.last_note || 'No notes yet.'}</p>
+      `;
+      card.appendChild(lastNote);
+
+      const banner = document.createElement('div');
+      banner.className = 'dem-sla-banner ' + (p.sla_breached ? 'breached' : 'ok');
+      banner.textContent = p.sla_breached
+        ? 'SLA Breached – please review this DEM as soon as possible.'
+        : 'SLA OK – project updated recently.';
+      card.appendChild(banner);
+
+      const actions = document.createElement('div');
+      actions.className = 'dem-actions';
+
+      const noteBtn = document.createElement('button');
+      noteBtn.type = 'button';
+      noteBtn.textContent = 'Add Note';
+      noteBtn.addEventListener('click', () => addNote(p.id));
+
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = '.doc,.docx,.pdf,.txt';
+      fileInput.style.display = 'none';
+
+      const uploadBtn = document.createElement('button');
+      uploadBtn.type = 'button';
+      uploadBtn.textContent = 'Attach Doc & Analyze';
+      uploadBtn.addEventListener('click', () => fileInput.click());
+
+      fileInput.addEventListener('change', () => {
+        if (fileInput.files && fileInput.files.length) {
+          uploadDoc(p.id, fileInput.files[0]);
+        }
+      });
+
+      const insightsBtn = document.createElement('button');
+      insightsBtn.type = 'button';
+      insightsBtn.textContent = 'View Document Summary';
+      insightsBtn.addEventListener('click', () => {
+        if (p.doc_summary) {
+          alert(p.doc_summary);
+        } else {
+          alert('No document summary stored for this DEM yet.');
+        }
+      });
+
+      const editBtn = document.createElement('button');
+      editBtn.type = 'button';
+      editBtn.textContent = 'Edit Project';
+      editBtn.addEventListener('click', () => editProject(p.id));
+
+      const archiveBtn = document.createElement('button');
+      archiveBtn.type = 'button';
+      archiveBtn.textContent = p.archived ? 'Restore' : 'Archive';
+      archiveBtn.classList.add('archive');
+      archiveBtn.addEventListener('click', () => toggleArchive(p.id, !!p.archived));
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.classList.add('danger');
+      deleteBtn.addEventListener('click', () => deleteProject(p.id));
+
+      actions.appendChild(noteBtn);
+      actions.appendChild(uploadBtn);
+      actions.appendChild(insightsBtn);
+      actions.appendChild(editBtn);
+      actions.appendChild(archiveBtn);
+      actions.appendChild(deleteBtn);
+      actions.appendChild(fileInput);
+
+      card.appendChild(actions);
+      projectsContainer.appendChild(card);
+    });
+  }
+
+  function updateNotif() {
+    const totalActiveSla = activeProjects.filter(p => p.sla_breached).length;
+    if (totalActiveSla > 0) {
+      notif.textContent = `● ${totalActiveSla} DEM(s) with SLA breached`;
+    } else {
+      notif.textContent = '● All active DEMs within SLA window';
+    }
+  }
+
+  async function addNote(projectId) {
+    const text = prompt('New update note for this DEM:');
+    if (!text) return;
+
+    try {
+      const res = await fetch(`/api/dems/projects/${projectId}/note`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ text })
+      });
+      const data = await res.json();
+      if (data.project) {
+        replaceProject(data.project);
+        renderAll();
+      } else {
+        alert('Error adding note: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Connection error adding note: ' + err);
+    }
+  }
+
+  async function editProject(projectId) {
+    const project = [...activeProjects, ...archivedProjects].find(p => p.id === projectId);
+    if (!project) return;
+    const updated = openProjectForm(project);
+    if (!updated) return;
+    try {
+      const res = await fetch(`/api/dems/projects/${projectId}/update`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(updated)
+      });
+      const data = await res.json();
+      if (data.project) {
+        replaceProject(data.project);
+        renderAll();
+      } else {
+        alert('Error updating project: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Connection error updating project: ' + err);
+    }
+  }
+
+  async function uploadDoc(projectId, file) {
+    const fd = new FormData();
+    fd.append('file', file);
+
+    alert('Uploading document and generating summary. This can take a few seconds.');
+
+    try {
+      const res = await fetch(`/api/dems/projects/${projectId}/attach`, {
+        method: 'POST',
+        body: fd
+      });
+      const data = await res.json();
+      if (data.project) {
+        replaceProject(data.project);
+        renderAll();
+        alert("Summary generated for this DEM.\n\nYou can view it with 'View Document Summary'.");
+      } else {
+        alert('Error attaching document: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Connection error attaching document: ' + err);
+    }
+  }
+
+  async function toggleArchive(projectId, currentlyArchived) {
+    const url = currentlyArchived
+      ? `/api/dems/projects/${projectId}/restore`
+      : `/api/dems/projects/${projectId}/archive`;
+    try {
+      const res = await fetch(url, { method: 'POST' });
+      const data = await res.json();
+      if (data.project) {
+        replaceProject(data.project);
+        renderAll();
+      } else {
+        alert('Error updating archive status: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Connection error updating archive status: ' + err);
+    }
+  }
+
+  async function deleteProject(projectId) {
+    if (!confirm('Delete this DEM permanently?')) return;
+    try {
+      const res = await fetch(`/api/dems/projects/${projectId}/delete`, {
+        method: 'POST'
+      });
+      const data = await res.json();
+      if (data.success) {
+        activeProjects = activeProjects.filter(p => p.id !== projectId);
+        archivedProjects = archivedProjects.filter(p => p.id !== projectId);
+        renderAll();
+      } else {
+        alert('Error deleting project: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Connection error deleting project: ' + err);
+    }
+  }
+
+  function replaceProject(updated) {
+    activeProjects = activeProjects.map(p => p.id === updated.id ? updated : p);
+    archivedProjects = archivedProjects.map(p => p.id === updated.id ? updated : p);
+    if (updated.archived) {
+      activeProjects = activeProjects.filter(p => p.id !== updated.id);
+      if (!archivedProjects.find(p => p.id === updated.id)) {
+        archivedProjects.push(updated);
+      }
+    } else {
+      archivedProjects = archivedProjects.filter(p => p.id !== updated.id);
+      if (!activeProjects.find(p => p.id === updated.id)) {
+        activeProjects.push(updated);
+      }
+    }
+  }
+
+  async function loadProjects() {
+    try {
+      const resActive = await fetch('/api/dems/projects?archived=false');
+      const dataActive = await resActive.json();
+      activeProjects = dataActive.projects || [];
+
+      const resArchived = await fetch('/api/dems/projects?archived=true');
+      const dataArchived = await resArchived.json();
+      archivedProjects = dataArchived.projects || [];
+
+      renderAll();
+    } catch (err) {
+      projectsContainer.innerHTML = "<p class='hint'>Error loading DEM list: " + err + "</p>";
+    }
+  }
+
+  document.addEventListener('mousemove', (e) => {
+    const g = document.createElement('div');
+    g.classList.add('ghost');
+    g.style.left = e.pageX + 'px';
+    g.style.top = e.pageY + 'px';
+    document.body.appendChild(g);
+    setTimeout(() => g.remove(), 600);
+  });
+
+  loadProjects();
+</script>
+</body>
+</html>
