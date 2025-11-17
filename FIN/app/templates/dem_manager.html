@@ -5,6 +5,110 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Project Manager</title>
   <link rel="stylesheet" href="/static/style.css" />
+
+  <!-- Extra inline styles for neon animations & notes panel -->
+  <style>
+    /* Neon pop for modals */
+    .modal .modal-content.neon-pop {
+      animation: neonPop 0.35s ease-out;
+    }
+
+    @keyframes neonPop {
+      0% {
+        transform: scale(0.85);
+        opacity: 0;
+        box-shadow: 0 0 0px rgba(255, 51, 102, 0.0);
+      }
+      60% {
+        transform: scale(1.03);
+        opacity: 1;
+        box-shadow: 0 0 24px rgba(255, 51, 102, 0.65);
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+        box-shadow: 0 0 12px rgba(255, 51, 102, 0.45);
+      }
+    }
+
+    /* Icono de notas recientes */
+    .dem-note-dot {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 6px;
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: radial-gradient(circle, #ff5c9f 0%, #ff003c 45%, transparent 70%);
+      box-shadow: 0 0 10px rgba(255, 0, 80, 0.9);
+      animation: pulseGlow 1.4s ease-in-out infinite;
+    }
+
+    @keyframes pulseGlow {
+      0% {
+        transform: scale(0.9);
+        box-shadow: 0 0 6px rgba(255, 0, 80, 0.7);
+      }
+      50% {
+        transform: scale(1.2);
+        box-shadow: 0 0 18px rgba(255, 0, 80, 1);
+      }
+      100% {
+        transform: scale(0.9);
+        box-shadow: 0 0 6px rgba(255, 0, 80, 0.7);
+      }
+    }
+
+    /* Panel de notas (timeline) */
+    .dem-notes-panel {
+      margin-top: 4px;
+      padding: 6px 10px;
+      border-radius: 10px;
+      background: linear-gradient(90deg, rgba(15, 15, 25, 0.9), rgba(40, 10, 50, 0.9));
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      max-height: 140px;
+      overflow-y: auto;
+      font-size: 0.78rem;
+    }
+
+    .dem-notes-panel h4 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #ff8fb8;
+      margin: 0 0 4px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dem-notes-panel h4 span.icon {
+      font-size: 0.85rem;
+    }
+
+    .dem-notes-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .dem-notes-list li {
+      padding: 3px 0;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+      line-height: 1.3;
+    }
+
+    .dem-notes-list li:last-child {
+      border-bottom: none;
+    }
+
+    .dem-note-empty {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.6);
+      font-style: italic;
+    }
+  </style>
 </head>
 
 <!-- MODAL: New / Edit Project -->
@@ -45,39 +149,39 @@
 
         <label>Status
           <select name="status">
-            <option>Specific Requirements</option>
-            <option>Business Case Creation</option>
-            <option>Review/Cost Estimation</option>
-            <option>Regional Business Center</option>
-            <option>Business Operations Approval</option>
-            <option>Functional Design</option>
-            <option>SOW Request</option>
-            <option>Budget Approval</option>
-            <option>CLM Request</option>
-            <option>Create CSR/PO</option>
-            <option>Change Request in Progress</option>
-            <option>Cancel</option>
-            <option>Closed</option>
+             <option>Specific Requirements</option>
+              <option>Business Case Creation</option>
+              <option>Review/Cost Estimation</option>
+              <option>Regional Business Center</option>
+              <option>Business Operations Approval</option>
+              <option>Functional Design</option>
+              <option>SOW Request</option>
+              <option>Budget Approval</option>
+              <option>CLM Request</option>
+              <option>Create CSR/PO</option>
+              <option>Change Request in Progress</option>
+              <option>Cancel</option>
+              <option>Closed</option>
           </select>
         </label>
 
         <label>Workflow Status
           <select name="workflow_status">
-            <option>Pending Est. Approval</option>
-            <option>Pending SOW</option>
-            <option>Pending CCB Review</option>
-            <option>CLM Process</option>
-            <option>Development</option>
-            <option>Development Queue</option>
-            <option>IT Testing</option>
-            <option>Dev Business Testing</option>
-            <option>Migration UAT</option>
-            <option>Migration PROD</option>
-            <option>IT Review</option>
-            <option>IT MGR Approval</option>
-            <option>Rejected</option>
-            <option>Closed</option>
-            <option>In Production</option>
+          <option>Pending Est. Approval</option>
+              <option>Pending SOW</option>
+              <option>Pending CCB Review</option>
+              <option>CLM Process</option>
+              <option>Development</option>
+              <option>Development Queue</option>
+              <option>IT Testing</option>
+              <option>Dev Business Testing</option>
+              <option>Migration UAT</option>
+              <option>Migration PROD</option>
+              <option>IT Review</option>
+              <option>IT MGR Approval</option>
+              <option>Rejected</option>
+              <option>Closed</option>
+              <option>In Production</option>
           </select>
         </label>
 
@@ -96,22 +200,6 @@
         <button type="submit" id="save-project">Save</button>
       </div>
     </form>
-  </div>
-</div>
-
-<!-- MODAL: Notes Manager -->
-<div id="notes-modal" class="modal hidden">
-  <div class="modal-content notes-modal">
-    <div class="notes-modal-header">
-      <h2>Notes for DEM: <span id="notes-modal-title"></span></h2>
-      <button id="notes-modal-close" type="button" class="icon-button">✕</button>
-    </div>
-    <div id="notes-modal-body" class="notes-modal-body">
-      <!-- Notes list rendered by JS -->
-    </div>
-    <div class="notes-modal-footer">
-      <button id="notes-modal-add" type="button" class="btn-cyber">+ Add Note</button>
-    </div>
   </div>
 </div>
 
@@ -195,6 +283,7 @@
 <div class="particle"></div>
 
 <script>
+  const backChatBtn = null; // we already have the Back button in the sidebar
   const createProjectBtn = document.getElementById('create-project-btn');
   const generateReportBtn = document.getElementById('generate-report-btn');
   const downloadTxtBtn = document.getElementById('download-txt-btn');
@@ -207,54 +296,30 @@
   const chipBar = document.getElementById('dem-chip-bar');
   const tabs = document.querySelectorAll('.dems-tab');
 
-  // Notes modal elements
-  const notesModal = document.getElementById('notes-modal');
-  const notesModalTitle = document.getElementById('notes-modal-title');
-  const notesModalBody = document.getElementById('notes-modal-body');
-  const notesModalClose = document.getElementById('notes-modal-close');
-  const notesModalAdd = document.getElementById('notes-modal-add');
-
   let activeProjects = [];
   let archivedProjects = [];
   let currentTab = 'active';
   let searchText = '';
-  let currentNotesProjectId = null;
 
-  // ---------- Helpers ----------
-
-  function allProjects() {
-    return [...activeProjects, ...archivedProjects];
-  }
-
-  function findProjectById(id) {
-    return allProjects().find(p => p.id === id);
-  }
-
-  function safeHtml(text) {
-    if (!text) return '';
-    return String(text)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-  }
-
-  function formatNotePreview(note) {
-    if (!note) return 'No notes yet.';
-    if (typeof note === 'string') return note;
-    const date = note.date || '';
-    const text = note.text || '';
-    return date ? `[${date}] — ${text}` : text;
-  }
-
-  // ---------- Modal Project Form ----------
-
+  // ----- Modal form -----
   function openProjectForm(existing) {
     const modal = document.getElementById("project-modal");
     const form = document.getElementById("project-form");
     const title = document.getElementById("modal-title");
 
+    // Show modal
     modal.classList.remove("hidden");
 
+    // Neon animation
+    const content = modal.querySelector(".modal-content");
+    if (content) {
+      content.classList.add("neon-pop");
+      content.addEventListener("animationend", () => {
+        content.classList.remove("neon-pop");
+      }, { once: true });
+    }
+
+    // Fill with existing data or empty
     form.reset();
     if (existing) {
       title.textContent = "Edit Project";
@@ -269,6 +334,7 @@
       form.onsubmit = e => {
         e.preventDefault();
         modal.classList.add("hidden");
+
         const data = Object.fromEntries(new FormData(form));
         resolve(data);
       };
@@ -280,8 +346,7 @@
     });
   }
 
-  // ---------- Create Project ----------
-
+  // ----- Create project -----
   createProjectBtn.addEventListener('click', async () => {
     const payload = await openProjectForm(null);
     if (!payload) return;
@@ -303,8 +368,7 @@
     }
   });
 
-  // ---------- Portfolio Report ----------
-
+  // ----- Report generation -----
   generateReportBtn.addEventListener('click', async () => {
     reportOutput.textContent = 'Generating report...';
     try {
@@ -317,7 +381,7 @@
       if (data.report) {
         reportOutput.textContent = data.report;
       } else {
-        reportOutput.textContent = 'Error generating report: ' + (data.error || 'Unknown error'));
+        reportOutput.textContent = 'Error generating report: ' + (data.error || 'Unknown error');
       }
     } catch (err) {
       reportOutput.textContent = 'Connection error generating report: ' + err;
@@ -350,8 +414,7 @@
   downloadDocxBtn.addEventListener('click', () => downloadReport('docx'));
   downloadPdfBtn.addEventListener('click', () => downloadReport('pdf'));
 
-  // ---------- Tabs ----------
-
+  // ----- Tabs -----
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
       tabs.forEach(t => t.classList.remove('active'));
@@ -361,8 +424,7 @@
     });
   });
 
-  // ---------- Search ----------
-
+  // ----- Search -----
   searchInput.addEventListener('input', () => {
     searchText = searchInput.value.toLowerCase();
     renderAll();
@@ -375,9 +437,6 @@
   function filterBySearch(list) {
     if (!searchText) return list;
     return list.filter(p => {
-      const notesText = (p.notes || [])
-        .map(n => typeof n === 'string' ? n : (n.text || ''))
-        .join(' ');
       const fields = [
         p.name,
         p.title,
@@ -388,10 +447,8 @@
         p.status,
         p.workflow_status,
         p.current_owner,
-        p.last_note && typeof p.last_note === 'string'
-          ? p.last_note
-          : '',
-        notesText
+        p.last_note,
+        (p.notes || []).join(' ')
       ].join(' ').toLowerCase();
       return fields.includes(searchText);
     });
@@ -418,8 +475,6 @@
     });
   }
 
-  // ---------- Rendering ----------
-
   function renderAll() {
     const list = filterBySearch(getCurrentList());
     buildChips(list);
@@ -441,17 +496,19 @@
       if (p.sla_breached) card.classList.add('sla-breached');
       if (p.archived) card.classList.add('archived');
 
-      // Header
       const header = document.createElement('div');
       header.className = 'dem-card-header';
       header.innerHTML = `
         <div>
-          <h3>${safeHtml(p.name || '(No name)')}</h3>
-          <p class="dem-subtitle">${safeHtml(p.title || '')}</p>
+          <h3>${p.name || '(No name)'}</h3>
+          <p class="dem-subtitle">
+            ${p.title || ''}
+            ${p.last_note ? '<span class="dem-note-dot" title="Recent updates"></span>' : ''}
+          </p>
         </div>
         <div class="dem-tags">
-          <span class="dem-tag primary">${safeHtml(p.status || 'N/A')}</span>
-          <span class="dem-tag">${safeHtml(p.workflow_status || '')}</span>
+          <span class="dem-tag primary">${p.status || 'N/A'}</span>
+          <span class="dem-tag">${p.workflow_status || ''}</span>
           <span class="dem-tag ${p.sla_breached ? 'sla-breached' : 'sla-ok'}">
             ${p.sla_breached ? 'SLA Breached' : 'SLA OK'}
           </span>
@@ -459,46 +516,93 @@
       `;
       card.appendChild(header);
 
-      // Meta
       const meta = document.createElement('div');
       meta.className = 'dem-meta';
       meta.innerHTML = `
-        <p><strong>Sponsor:</strong> ${safeHtml(p.sponsor || '-')}</p>
-        <p><strong>Requester:</strong> ${safeHtml(p.requester || '-')}</p>
-        <p><strong>BA Owner:</strong> ${safeHtml(p.ba_owner || '-')}</p>
-        <p><strong>Current Task Owner:</strong> ${safeHtml(p.current_owner || '-')}</p>
-        <p><strong>Cost Center:</strong> ${safeHtml(p.cost_center || '-')}</p>
-        <p><strong>Start Date:</strong> ${safeHtml(p.start_date || '-')}</p>
+        <p><strong>Sponsor:</strong> ${p.sponsor || '-'}</p>
+        <p><strong>Requester:</strong> ${p.requester || '-'}</p>
+        <p><strong>BA Owner:</strong> ${p.ba_owner || '-'}</p>
+        <p><strong>Current Task Owner:</strong> ${p.current_owner || '-'}</p>
+        <p><strong>Cost Center:</strong> ${p.cost_center || '-'}</p>
+        <p><strong>Start Date:</strong> ${p.start_date || '-'}</p>
         <p><strong>Duration (days):</strong> ${p.duration_days ?? '-'}</p>
       `;
       card.appendChild(meta);
 
-      // Last note
       const lastNote = document.createElement('div');
       lastNote.className = 'dem-last-note';
       lastNote.innerHTML = `
         <strong>Last Note:</strong>
-        <p>${safeHtml(formatNotePreview(p.last_note))}</p>
+        <p>${p.last_note || 'No notes yet.'}</p>
       `;
       card.appendChild(lastNote);
 
-      // Notes timeline strip (opens modal)
-      const notesStrip = document.createElement('div');
-      notesStrip.className = 'dem-notes-strip';
-      const notesCount = (p.notes || []).length || 0;
-      notesStrip.innerHTML = `
-        <button type="button" class="notes-open-btn">
-          <span class="pulse-dot ${notesCount ? 'has-notes' : ''}"></span>
-          <span class="notes-label">Notes Timeline (newest first)</span>
-        </button>
-        <span class="notes-meta">${notesCount} note${notesCount === 1 ? '' : 's'}</span>
-      `;
-      notesStrip.querySelector('.notes-open-btn').addEventListener('click', () => {
-        openNotesModal(p.id);
-      });
-      card.appendChild(notesStrip);
+      // ----- NOTES TIMELINE (NEWEST FIRST) -----
+if (p.notes && p.notes.length > 0) {
+  const notesBox = document.createElement("div");
+  notesBox.className = "notes-timeline-box";
 
-      // SLA banner
+  notesBox.innerHTML = `
+    <div class="notes-title">
+      <span class="notes-icon">✦</span>
+      NOTES TIMELINE (NEWEST FIRST)
+    </div>
+  `;
+
+  const ul = document.createElement("ul");
+  ul.className = "notes-timeline-list";
+
+  // newest first
+  [...p.notes].reverse().forEach(n => {
+    const li = document.createElement("li");
+    li.className = "note-item";
+
+    let textLine = "";
+
+    // If it's a string note (older format)
+    if (typeof n === "string") {
+      textLine = n;
+    }
+    // If note stored as object {text, date}
+    else if (typeof n === "object") {
+      textLine = `[${n.date}] — ${n.text}`;
+    }
+
+    li.textContent = textLine;
+    ul.appendChild(li);
+  });
+
+  notesBox.appendChild(ul);
+  card.appendChild(notesBox);
+}
+
+
+      // Panel con TODAS las notas en orden cronológico inverso (más nuevas arriba)
+      const notesPanel = document.createElement('div');
+      notesPanel.className = 'dem-notes-panel';
+
+      const notesHeader = document.createElement('h4');
+      notesHeader.innerHTML = '<span class="icon">✦</span> Notes timeline (newest first)';
+      notesPanel.appendChild(notesHeader);
+
+      if (p.notes && p.notes.length) {
+        const ul = document.createElement('ul');
+        ul.className = 'dem-notes-list';
+        [...p.notes].slice().reverse().forEach(n => {
+          const li = document.createElement('li');
+          li.textContent = n;
+          ul.appendChild(li);
+        });
+        notesPanel.appendChild(ul);
+      } else {
+        const empty = document.createElement('div');
+        empty.className = 'dem-note-empty';
+        empty.textContent = 'No notes registered for this DEM yet.';
+        notesPanel.appendChild(empty);
+      }
+
+      card.appendChild(notesPanel);
+
       const banner = document.createElement('div');
       banner.className = 'dem-sla-banner ' + (p.sla_breached ? 'breached' : 'ok');
       banner.textContent = p.sla_breached
@@ -506,13 +610,12 @@
         : 'SLA OK – project updated recently.';
       card.appendChild(banner);
 
-      // Actions
       const actions = document.createElement('div');
       actions.className = 'dem-actions';
 
       const noteBtn = document.createElement('button');
       noteBtn.type = 'button';
-      noteBtn.textContent = 'Manage Notes';
+      noteBtn.textContent = 'Add Note';
       noteBtn.addEventListener('click', () => addNote(p.id));
 
       const fileInput = document.createElement('input');
@@ -581,123 +684,25 @@
     }
   }
 
-  // ---------- Notes Modal Logic ----------
-
-  function closeNotesModal() {
-    notesModal.classList.add('hidden');
-    notesModal.classList.remove('show');
-    currentNotesProjectId = null;
-  }
-
-  notesModalClose.addEventListener('click', closeNotesModal);
-
-  notesModal.addEventListener('click', (e) => {
-    if (e.target === notesModal) {
-      closeNotesModal();
-    }
-  });
-
-  notesModalAdd.addEventListener('click', () => {
-    if (currentNotesProjectId) {
-      handleAddNote(currentNotesProjectId);
-    }
-  });
-
-  function openNotesModal(projectId, options = {}) {
-    const project = findProjectById(projectId);
-    if (!project) return;
-
-    currentNotesProjectId = projectId;
-
-    notesModalTitle.textContent = project.name || project.title || project.id;
-    notesModalBody.innerHTML = '';
-
-    const rawNotes = project.notes || [];
-    const annotated = rawNotes.map((n, idx) =>
-      typeof n === 'string'
-        ? { text: n, date: '', _index: idx }
-        : { text: n.text || '', date: n.date || '', _index: idx }
-    );
-
-    // Newest first: sort by date desc; fall back to index
-    annotated.sort((a, b) => {
-      const da = a.date ? new Date(a.date) : null;
-      const db = b.date ? new Date(b.date) : null;
-      if (da && db && !isNaN(da) && !isNaN(db)) {
-        return db - da;
-      }
-      return b._index - a._index;
-    });
-
-    if (!annotated.length) {
-      notesModalBody.innerHTML = '<p class="hint">No notes registered for this DEM yet.</p>';
-    } else {
-      const list = document.createElement('div');
-      list.className = 'notes-list';
-
-      annotated.forEach(n => {
-        const row = document.createElement('div');
-        row.className = 'note-row';
-        row.innerHTML = `
-          <div class="note-meta">
-            <span class="note-dot"></span>
-            <span class="note-date">${safeHtml(n.date || '')}</span>
-          </div>
-          <div class="note-text">${safeHtml(n.text || '')}</div>
-          <div class="note-actions">
-            <button type="button" class="note-edit" data-index="${n._index}">✏</button>
-            <button type="button" class="note-delete" data-index="${n._index}">🗑</button>
-          </div>
-        `;
-        list.appendChild(row);
-      });
-
-      notesModalBody.appendChild(list);
-
-      notesModalBody.querySelectorAll('.note-edit').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const idx = parseInt(btn.dataset.index, 10);
-          editNote(projectId, idx);
-        });
-      });
-
-      notesModalBody.querySelectorAll('.note-delete').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const idx = parseInt(btn.dataset.index, 10);
-          deleteNote(projectId, idx);
-        });
-      });
-    }
-
-    notesModal.classList.remove('hidden');
-    // Para animación neon puedes usar .show en CSS
-    setTimeout(() => notesModal.classList.add('show'), 10);
-
-    if (options.autoNew) {
-      setTimeout(() => handleAddNote(projectId), 200);
-    }
-  }
-
-  // Botón "Manage Notes" en la tarjeta
   async function addNote(projectId) {
-    openNotesModal(projectId, { autoNew: true });
-  }
-
-  async function handleAddNote(projectId) {
     const text = prompt("Enter your update note:");
     if (!text) return;
+
+    const timestamp = new Date().toISOString().slice(0,16).replace("T"," ");
+    const notePayload = `[${timestamp}] — ${text}`;
 
     try {
       const res = await fetch(`/api/dems/projects/${projectId}/note`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ text })
+        body: JSON.stringify({ text: notePayload })
       });
+
       const data = await res.json();
+
       if (data.project) {
         replaceProject(data.project);
         renderAll();
-        openNotesModal(projectId);
       } else {
         alert("Error saving note: " + (data.error || "Unknown"));
       }
@@ -706,63 +711,8 @@
     }
   }
 
-  async function editNote(projectId, index) {
-    const project = findProjectById(projectId);
-    if (!project || !project.notes || index < 0 || index >= project.notes.length) return;
-
-    const existing = project.notes[index];
-    const currentText = typeof existing === 'string'
-      ? existing
-      : (existing.text || '');
-
-    const newText = prompt("Edit note:", currentText);
-    if (newText === null) return; // cancel
-
-    try {
-      const res = await fetch(`/api/dems/projects/${projectId}/note/edit`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ index, text: newText })
-      });
-      const data = await res.json();
-      if (data.project) {
-        replaceProject(data.project);
-        renderAll();
-        openNotesModal(projectId);
-      } else {
-        alert("Error editing note: " + (data.error || "Unknown"));
-      }
-    } catch (err) {
-      alert("Connection error editing note: " + err);
-    }
-  }
-
-  async function deleteNote(projectId, index) {
-    if (!confirm("Delete this note?")) return;
-
-    try {
-      const res = await fetch(`/api/dems/projects/${projectId}/note/delete`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ index })
-      });
-      const data = await res.json();
-      if (data.project) {
-        replaceProject(data.project);
-        renderAll();
-        openNotesModal(projectId);
-      } else {
-        alert("Error deleting note: " + (data.error || "Unknown"));
-      }
-    } catch (err) {
-      alert("Connection error deleting note: " + err);
-    }
-  }
-
-  // ---------- Other DEM actions ----------
-
   async function editProject(projectId) {
-    const project = findProjectById(projectId);
+    const project = [...activeProjects, ...archivedProjects].find(p => p.id === projectId);
     if (!project) return;
     const updated = await openProjectForm(project);
     if (!updated) return;
