@@ -10,9 +10,9 @@ services:
     environment:
       APP_USER: ${APP_USER}
       APP_PASS: ${APP_PASS}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - OPENAI_MODEL=${OPENAI_MODEL}
-      - FLASK_SECRET_KEY=${FLASK_SECRET_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL}
+      FLASK_SECRET_KEY: ${FLASK_SECRET_KEY}
     volumes:
       - ./app/uploads:/app/uploads
     restart: unless-stopped
