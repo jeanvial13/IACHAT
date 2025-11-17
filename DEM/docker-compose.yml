@@ -1,30 +1,19 @@
-FROM python:3.11-slim
+version: "3.9"
 
-# Evita problemas de cache
-ENV PIP_NO_CACHE_DIR=1
-
-# Instalar dependencias del sistema necesarias para python-docx, openpyxl, pypdf
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libxml2 \
-    libxslt1.1 \
-    libjpeg62-turbo \
-    libpng-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-
-# Copiar toda la carpeta app/
-COPY app/ /app/
-
-# Actualizar pip
-RUN pip install --upgrade pip setuptools wheel
-
-# Instalar requerimientos
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Exponer puerto del servidor Flask
-EXPOSE 8080
-
-# Ejecutar la aplicación
-CMD ["python3", "chat_handler.py"]
+services:
+  ia:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ia
+    ports:
+      - "8080:8080"
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL}
+      FLASK_SECRET_KEY: ${FLASK_SECRET_KEY}
+      APP_USER: ${APP_USER}
+      APP_PASS: ${APP_PASS}
+    volumes:
+      - ./app/uploads:/app/uploads
+    restart: unless-stopped
