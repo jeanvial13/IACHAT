@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -8,6 +9,15 @@
 
   <!-- Estilos extra para notas, modales y Portfolio Report -->
   <style>
+    /* FIX de scroll global: forzamos que la página sea desplazable */
+    html, body {
+      overflow-y: auto !important;
+      height: auto !important;
+    }
+    main.chat {
+      overflow-y: auto !important;
+    }
+
     /* Animación pop neon para modales */
     .modal .modal-content.neon-pop {
       animation: neonPop 0.35s ease-out;
@@ -37,7 +47,7 @@
       100% { transform: scale(0.9); box-shadow: 0 0 6px rgba(255, 0, 80, 0.7); }
     }
 
-    /* Caja superior de timeline de notas con botones Edit/Delete */
+    /* Caja de timeline de notas con botones Edit/Delete */
     .notes-timeline-box {
       margin-top: 10px;
       padding: 8px 10px;
@@ -112,47 +122,6 @@
       box-shadow: 0 0 10px #ff003c;
     }
 
-    /* Panel de notas inferior (lista simple) */
-    .dem-notes-panel {
-      margin-top: 4px;
-      padding: 6px 10px;
-      border-radius: 10px;
-      background: linear-gradient(90deg, rgba(15, 15, 25, 0.9), rgba(40, 10, 50, 0.9));
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      max-height: 140px;
-      overflow-y: auto;
-      font-size: 0.78rem;
-    }
-
-    .dem-notes-panel h4 {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #ff8fb8;
-      margin: 0 0 4px 0;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .dem-notes-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .dem-notes-list li {
-      padding: 3px 0;
-      border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
-      line-height: 1.3;
-    }
-
-    .dem-note-empty {
-      font-size: 0.75rem;
-      color: rgba(255, 255, 255, 0.6);
-      font-style: italic;
-    }
-
     /* Caja del Portfolio Report con scroll independiente */
     #dem-report-output {
       max-height: 420px;
@@ -174,7 +143,7 @@
 </head>
 
 <body>
-<!-- MODAL: New / Edit Project (correctamente DENTRO del body) -->
+<!-- MODAL: New / Edit Project -->
 <div id="project-modal" class="modal hidden">
   <div class="modal-content">
     <h2 id="modal-title">New Project</h2>
@@ -610,7 +579,7 @@
       `;
       card.appendChild(lastNote);
 
-      /* ----- NOTES TIMELINE SUPERIOR (EDIT / DELETE) ----- */
+      /* ----- ÚNICO NOTES TIMELINE (CON EDIT / DELETE) ----- */
       if (p.notes && p.notes.length > 0) {
         const notesBox = document.createElement("div");
         notesBox.className = "notes-timeline-box";
@@ -663,38 +632,6 @@
         card.appendChild(notesBox);
       }
 
-      /* ----- PANEL INFERIOR SIMPLE DE NOTAS ----- */
-      const notesPanel = document.createElement('div');
-      notesPanel.className = 'dem-notes-panel';
-
-      const notesHeader = document.createElement('h4');
-      notesHeader.innerHTML = '<span class="icon">✦</span> Notes timeline (newest first)';
-      notesPanel.appendChild(notesHeader);
-
-      if (p.notes && p.notes.length) {
-        const ul = document.createElement('ul');
-        ul.className = 'dem-notes-list';
-        [...p.notes].slice().reverse().forEach(n => {
-          const li = document.createElement('li');
-          if (typeof n === 'string') {
-            li.textContent = n;
-          } else if (n && typeof n === 'object') {
-            li.textContent = `[${n.date || ''}] — ${n.text || ''}`;
-          } else {
-            li.textContent = String(n);
-          }
-          ul.appendChild(li);
-        });
-        notesPanel.appendChild(ul);
-      } else {
-        const empty = document.createElement('div');
-        empty.className = 'dem-note-empty';
-        empty.textContent = 'No notes registered for this DEM yet.';
-        notesPanel.appendChild(empty);
-      }
-
-      card.appendChild(notesPanel);
-
       const banner = document.createElement('div');
       banner.className = 'dem-sla-banner ' + (p.sla_breached ? 'breached' : 'ok');
       banner.textContent = p.sla_breached
@@ -702,17 +639,15 @@
         : 'SLA OK – project updated recently.';
       card.appendChild(banner);
 
-      /* ----- ACTION BUTTONS (CON IA RESTAURADA) ----- */
+      /* ----- ACTION BUTTONS (CON IA) ----- */
       const actions = document.createElement('div');
       actions.className = 'dem-actions';
 
-      // Add Note
       const addNoteBtn = document.createElement('button');
       addNoteBtn.type = 'button';
       addNoteBtn.textContent = 'Add Note';
       addNoteBtn.addEventListener('click', () => addNote(p.id));
 
-      // File upload para IA
       const fileInput = document.createElement('input');
       fileInput.type = 'file';
       fileInput.accept = '.doc,.docx,.pdf,.txt';
@@ -728,7 +663,6 @@
       attachBtn.textContent = 'Attach Doc & Analyze';
       attachBtn.addEventListener('click', () => fileInput.click());
 
-      // Ver resumen
       const viewSummaryBtn = document.createElement('button');
       viewSummaryBtn.type = 'button';
       viewSummaryBtn.textContent = 'View Document Summary';
@@ -740,20 +674,17 @@
         }
       });
 
-      // Edit project
       const editBtn = document.createElement('button');
       editBtn.type = 'button';
       editBtn.textContent = 'Edit Project';
       editBtn.addEventListener('click', () => editProject(p.id));
 
-      // Archive / Restore
       const archiveBtn = document.createElement('button');
       archiveBtn.type = 'button';
       archiveBtn.textContent = p.archived ? 'Restore' : 'Archive';
       archiveBtn.classList.add('archive');
       archiveBtn.addEventListener('click', () => toggleArchive(p.id, !!p.archived));
 
-      // Delete
       const deleteBtn = document.createElement('button');
       deleteBtn.type = 'button';
       deleteBtn.textContent = 'Delete';
