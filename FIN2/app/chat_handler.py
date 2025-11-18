@@ -191,36 +191,28 @@ def enrich_dem(dem):
     return dem
 
 
-
 def build_portfolio_text(dems):
-    """Build corporate portfolio text in English for TXT/DOCX/PDF and UI.
+    """Business-elite style portfolio report (ACTIVE DEMs only).
 
-    NOTE:
-        The caller is responsible for deciding which DEMs to include.
-        In our current usage, only ACTIVE (non-archived) DEMs are passed.
+    The caller must pass ONLY the DEMs that should be included (e.g. non-archived).
     """
     if not dems:
-        return "There are currently no DEM projects registered."
+        return (
+            "ANDRES VILLANUEVA – DEM PORTFOLIO EXECUTIVE SUMMARY\n"
+            f"{datetime.utcnow().strftime('%B %d, %Y')}\n"
+            "================================================================\n\n"
+            "There are currently no active DEM projects registered in the portfolio."
+        )
 
-    # Enrich first so we can compute metrics and then reuse the same data
     enriched = [enrich_dem(d) for d in dems]
-
     run_date_human = datetime.utcnow().strftime("%B %d, %Y")
-    header = f"{run_date_human} — Andres Villanueva DEMS Report"
 
-    lines: list[str] = []
-    lines.append(header)
-    lines.append("")
-
-    # ---- PORTFOLIO SNAPSHOT (EXECUTIVE HEADER) ----
+    # ---- PORTFOLIO METRICS ----
     total = len(enriched)
-
-    # Priority distribution (1–4)
     p1 = p2 = p3 = p4 = 0
-    # SLA metrics
     sla_ok = sla_breached = 0
-    # Simple DEM Status count to surface the most common stages
     status_counts = {}
+    workflow_counts = {}
 
     for e in enriched:
         pr = str(e.get("priority") or "2")
@@ -241,68 +233,115 @@ def build_portfolio_text(dems):
         st = e.get("status") or "N/A"
         status_counts[st] = status_counts.get(st, 0) + 1
 
-    lines.append("Portfolio Snapshot (active DEM projects only)")
-    lines.append(f"- Total active DEMs: {total}")
-    lines.append(f"- Priority distribution: P1={p1} | P2={p2} | P3={p3} | P4={p4}")
-    lines.append(f"- SLA window (last 5 days): OK={sla_ok} | Breached={sla_breached}")
+        wf = e.get("workflow_status") or "N/A"
+        workflow_counts[wf] = workflow_counts.get(wf, 0) + 1
+
+    def _top_entries(d, limit=3):
+        return sorted(d.items(), key=lambda kv: kv[1], reverse=True)[:limit]
+
+    lines = []
+
+    # ---- HEADER ----
+    lines.append("ANDRES VILLANUEVA – DEM PORTFOLIO EXECUTIVE SUMMARY")
+    lines.append(run_date_human)
+    lines.append("================================================================")
+    lines.append("")
+
+    # ---- SECTION 1 – PORTFOLIO DASHBOARD ----
+    lines.append("SECTION 1 – PORTFOLIO DASHBOARD (Active DEMs)")
+    lines.append("")
+    lines.append(f"  • Total active DEMs: {total}")
+    lines.append(
+        "  • Priority mix (P1–P4): "
+        f"P1 – Critical = {p1}  |  "
+        f"P2 – High = {p2}  |  "
+        f"P3 – Medium = {p3}  |  "
+        f"P4 – Low = {p4}"
+    )
+    lines.append(
+        "  • SLA window (last 5 days): "
+        f"OK = {sla_ok}  |  Breached = {sla_breached}"
+    )
 
     if status_counts:
-        top_status = sorted(status_counts.items(), key=lambda kv: kv[1], reverse=True)[:3]
-        status_str = ", ".join(f"{name}: {cnt}" for name, cnt in top_status)
-        lines.append(f"- Most common DEM Status: {status_str}")
+        top_status = _top_entries(status_counts)
+        status_str = "; ".join(f"{name}: {cnt}" for name, cnt in top_status)
+        lines.append(f"  • DEM Status distribution (top): {status_str}")
+
+    if workflow_counts:
+        top_wf = _top_entries(workflow_counts)
+        wf_str = "; ".join(f"{name}: {cnt}" for name, cnt in top_wf)
+        lines.append(f"  • Workflow focus (top stages): {wf_str}")
 
     lines.append("")
     lines.append(
-        "The following sections provide a detailed summary for each DEM, including "
-        "Project Title, Sponsor, BA Owner, Workflow Status, SLA condition and the "
-        "most recent notes captured during project follow-up."
+        "This dashboard provides a concise view of current workload, criticality and "
+        "follow-up pressure across the DEM portfolio. It is designed to support "
+        "executive decisions on where to escalate, reinforce ownership and unlock "
+        "progress."
+    )
+    lines.append("")
+    lines.append("SECTION 2 – PROJECT-BY-PROJECT SNAPSHOT")
+    lines.append(
+        "Each DEM below summarizes the latest known situation: ownership, current "
+        "workflow stage, SLA condition and most recent notes captured during "
+        "project follow-up."
     )
     lines.append("")
 
-    # ---- DETAILED PER-DEM SECTION ----
-    for e in enriched:
-        lines.append(f"DEM: {e.get('name', '(no name)')}")
-        lines.append(f"  Project Title: {e.get('title', '')}")
+    # ---- SECTION 2 – DETAILS ----
+    priority_labels = {
+        "1": "P1 – Critical (must protect revenue / operations)",
+        "2": "P2 – High (time-sensitive, visible to leadership)",
+        "3": "P3 – Medium (important, planned into roadmap)",
+        "4": "P4 – Low (opportunistic / housekeeping)",
+    }
+
+    for idx, e in enumerate(enriched, start=1):
+        lines.append("----------------------------------------------------------------")
+        lines.append(f"DEM {idx}: {e.get('name', '(no name)')}")
+        if e.get("title"):
+            lines.append(f"  Project Title      : {e.get('title')}")
         lines.append(
-            f"  Sponsor: {e.get('sponsor', '-')}"  # type: ignore[str-format]
-            f"  |  Requester: {e.get('requester', '-')}"  # type: ignore[str-format]
+            f"  Sponsor            : {e.get('sponsor', '-')}"
+            f"  | Requester: {e.get('requester', '-')}"
         )
         lines.append(
-            f"  BA Owner: {e.get('ba_owner', '-')}"  # type: ignore[str-format]
-            f"  |  Current Task Owner: {e.get('current_owner', '-')}"  # type: ignore[str-format]
+            f"  BA Owner           : {e.get('ba_owner', '-')}"
+            f"  | Current Task Owner: {e.get('current_owner', '-')}"
         )
-        lines.append(f"  Cost Center: {e.get('cost_center', '-')}")
+        lines.append(f"  Cost Center        : {e.get('cost_center', '-')}")
         lines.append(
-            f"  Start Date: {e.get('start_date', '-')}"  # type: ignore[str-format]
-            f"  |  Duration (days): {e.get('duration_days')}"  # type: ignore[str-format]
+            f"  Start Date         : {e.get('start_date', '-')}"
+            f"  | Duration (days): {e.get('duration_days')}"
         )
-        lines.append(f"  DEM Status: {e.get('status', '-')}")
-        lines.append(f"  Workflow Status: {e.get('workflow_status', '-')}")
-        lines.append(f"  Priority (1–4): {e.get('priority', '2')}")
+        lines.append(f"  DEM Status         : {e.get('status', '-')}")
+        lines.append(f"  Workflow Status    : {e.get('workflow_status', '-')}")
+        pr = str(e.get("priority") or "2")
+        lines.append(f"  Priority (1–4)     : {priority_labels.get(pr, f'P{pr}')}")
         lines.append(
-            "  SLA: "
+            "  SLA                : "
             + (
-                "SLA Breached – please review this DEM with the sponsor and IT lead."
+                "SLA Breached – requires immediate attention with sponsor and IT lead."
                 if e.get("sla_breached")
                 else "SLA OK – project has been updated within the defined window."
             )
         )
 
-        # Last two notes, with dates if available
+        # Last two notes
         raw_notes = e.get("notes") or []
         if raw_notes:
             formatted_notes = [_format_note(n) for n in raw_notes]
             last_two = formatted_notes[-2:]
             lines.append("  Last Notes (most recent entries):")
             for n in last_two:
-                lines.append(f"    - {n}")
+                lines.append(f"    • {n}")
         else:
-            lines.append("  Last Notes: (no notes registered)")
+            lines.append("  Last Notes          : (no notes registered)")
 
         lines.append("")
 
     return "\n".join(lines)
-
 
 
 # ---------------- Auth & Views ----------------
@@ -568,6 +607,7 @@ def add_dem_note(id):
         return jsonify({"error": "DEM no encontrado."}), 404
     return jsonify({"project": project})
 
+
 # ---- EDIT NOTE ---------------------------------------------------------
 @app.route("/api/dems/projects/<id>/note/edit", methods=["POST"])
 def edit_dem_note(id):
@@ -592,7 +632,7 @@ def edit_dem_note(id):
         # Update note content, keep date or refresh it
         notes[index] = {
             "text": new_text,
-            "date": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+            "date": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
         }
         d["notes"] = notes
 
@@ -639,7 +679,6 @@ def delete_dem_note(id):
         return jsonify({"error": "DEM not found"}), 404
 
     return jsonify({"project": project})
-
 
 
 @app.route("/api/dems/projects/<id>/update", methods=["POST"])
@@ -919,7 +958,6 @@ def export_archived_excel():
     )
 
 
-@app.route("/api/dems/report", methods=["POST"])
 @app.route("/api/dems/export_json", methods=["GET"])
 def export_dems_json():
     """Export ALL DEM projects (active + archived) as a JSON backup file."""
@@ -982,6 +1020,7 @@ def import_dems_json():
     return jsonify({"projects": enriched})
 
 
+@app.route("/api/dems/report", methods=["POST"])
 def dem_report():
     """Return the corporate portfolio text (used in the UI panel), EXCLUDING archived DEMs."""
     maybe = require_auth()
@@ -998,7 +1037,6 @@ def dem_report():
     text = build_portfolio_text(active_dems)
 
     return jsonify({"report": text})
-
 
 
 @app.route("/api/dems/download/<fmt>", methods=["GET"])
@@ -1037,10 +1075,7 @@ def dem_download(fmt):
             return jsonify({"error": "python-docx no está disponible."}), 500
         doc = Document()
         doc.add_heading(title, level=1)
-        doc.add_paragraph(
-          
-        )
-        doc.add_paragraph("")
+        doc.add_paragraph("")  # spacer after title
         for line in body.split("\n"):
             doc.add_paragraph(line)
 
