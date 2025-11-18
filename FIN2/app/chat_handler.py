@@ -142,16 +142,17 @@ def _format_note(note) -> str:
     return str(note)
 
 
+
 def enrich_dem(dem):
     """Add computed fields (duration_days, last_note, sla_breached, archived, priority, documents)."""
     dem = dict(dem)
 
     # Duration in days
-    start = dem.get("start_date")
+    start_date = dem.get("start_date")
     dem["duration_days"] = None
-    if start:
+    if start_date:
         try:
-            dt = datetime.strptime(start, "%Y-%m-%d")
+            dt = datetime.strptime(start_date, "%Y-%m-%d")
             dem["duration_days"] = (datetime.utcnow().date() - dt.date()).days
         except Exception:
             pass
@@ -183,7 +184,7 @@ def enrich_dem(dem):
     if not dem.get("priority"):
         dem["priority"] = "2"
 
-    # Ensure documents list exists
+    # Ensure documents list exists for attached summaries
     docs = dem.get("documents")
     if docs is None or not isinstance(docs, list):
         dem["documents"] = []
@@ -193,12 +194,20 @@ def enrich_dem(dem):
 
 def build_portfolio_text(dems):
     """
-    Generates a clean, structured and elegant text dataset
-    ready to be formatted beautifully in DOCX and PDF.
+    Build corporate portfolio text in English for TXT/DOCX/PDF and UI.
+
+    Section 1: Projects Resume (executive overview, one line per DEM)
+    Section 2: Projects Details (full breakdown, last notes, SLA, etc.)
+
+    IMPORTANT:
+        - Only ACTIVE (non‑archived) DEMs should be passed in.
+        - This function only formats text; colours / fonts are handled
+          by the DOCX/PDF generators.
     """
     if not dems:
         return "There are currently no DEM projects registered."
 
+    # Enrich once so we can use computed fields
     enriched = [enrich_dem(d) for d in dems]
 
     run_date_human = datetime.utcnow().strftime("%B %d, %Y")
@@ -207,39 +216,49 @@ def build_portfolio_text(dems):
     lines = []
     lines.append(header)
     lines.append("")
-
-    # ======================================================
-    # SECTION 1 — PORTFOLIO SNAPSHOT (premium structured)
-    # ======================================================
-    lines.append("1. Portfolio Snapshot — Executive Overview")
+    lines.append("1. Projects Resume — Executive Overview")
     lines.append("")
-    lines.append("Key portfolio metrics for active DEM projects:")
 
     total = len(enriched)
+
+    # Priority distribution (1–4)
     p1 = p2 = p3 = p4 = 0
     sla_ok = sla_breached = 0
     status_counts = {}
 
     for e in enriched:
-        pr = str(e.get("priority", "2"))
-        if pr == "1": p1 += 1
-        if pr == "2": p2 += 1
-        if pr == "3": p3 += 1
-        if pr == "4": p4 += 1
+        pr = str(e.get("priority") or "2")
+        if pr == "1":
+            p1 += 1
+        elif pr == "2":
+            p2 += 1
+        elif pr == "3":
+            p3 += 1
+        elif pr == "4":
+            p4 += 1
 
-        if e.get("sla_breached"): sla_breached += 1
-        else: sla_ok += 1
+        if e.get("sla_breached"):
+            sla_breached += 1
+        else:
+            sla_ok += 1
 
-        st = e.get("status", "N/A")
+        st = e.get("status") or "N/A"
         status_counts[st] = status_counts.get(st, 0) + 1
 
+    # --- Key metrics ---
+    lines.append("Key portfolio metrics for active DEM projects:")
     lines.append(f"• Total active DEMs: {total}")
-    lines.append(f"• Priority distribution: P1={p1} | P2={p2} | P3={p3} | P4={p4}")
+    lines.append("• Priority distribution:")
+    lines.append(f"   – P1 (Critical): {p1}")
+    lines.append(f"   – P2 (High): {p2}")
+    lines.append(f"   – P3 (Medium): {p3}")
+    lines.append(f"   – P4 (Low): {p4}")
     lines.append(f"• SLA window (last 5 days): OK={sla_ok} | Breached={sla_breached}")
 
     if status_counts:
-        top = sorted(status_counts.items(), key=lambda kv: kv[1], reverse=True)[:3]
-        lines.append("• Most common DEM Status: " + ", ".join(f"{k}: {v}" for k, v in top))
+        top_status = sorted(status_counts.items(), key=lambda kv: kv[1], reverse=True)[:3]
+        status_str = ", ".join(f"{name}: {cnt}" for name, cnt in top_status)
+        lines.append(f"• Most common DEM Status: {status_str}")
 
     lines.append("")
     lines.append("Active DEM overview (project name + latest comment):")
@@ -247,56 +266,78 @@ def build_portfolio_text(dems):
 
     for e in enriched:
         name = e.get("name", "(no name)")
-        wf = e.get("workflow_status", "-")
-        st = e.get("status", "-")
+        status = e.get("status", "-")
+        workflow = e.get("workflow_status", "-")
         pr = e.get("priority", "2")
-        last_note = e.get("last_note") or "(no notes registered)"
-        if len(last_note) > 200:
-            last_note = last_note[:197] + "..."
 
-        lines.append(f"• {name} — Status: {st} | Workflow: {wf} | Priority: P{pr}")
-        lines.append(f"    Last update: {last_note}")
+        # Latest note only
+        raw_notes = e.get("notes") or []
+        if raw_notes:
+            latest = _format_note(raw_notes[-1])
+        else:
+            latest = "No recent notes registered."
+
+        lines.append(
+            f"• {name} — Status: {status} | Workflow: {workflow} | Priority: P{pr}"
+        )
+        lines.append(f"  Last update: {latest}")
         lines.append("")
 
+    lines.append(
+        "The following pages contain a detailed section per DEM, including "
+        "Project Title, Sponsor, BA Owner, Workflow Status, SLA condition and "
+        "the most recent notes captured during project follow-up."
+    )
     lines.append("")
-    lines.append("The following pages contain a detailed section per DEM.")
+    lines.append("-" * 78)
+    lines.append("")
+    lines.append("2. Projects Details")
     lines.append("")
 
-    # ================================================
-    # SECTION 2 — PER-DEM DETAILS
-    # ================================================
+    # --- Detailed section per DEM ---
     for e in enriched:
         lines.append(f"DEM: {e.get('name', '(no name)')}")
-        lines.append(f"Project Title: {e.get('title', '-')}")
-        lines.append(f"Sponsor: {e.get('sponsor', '-')} | Requester: {e.get('requester', '-')}")
-        lines.append(f"BA Owner: {e.get('ba_owner', '-')} | Current Task Owner: {e.get('current_owner', '-')}")
+        lines.append(f"Project Title: {e.get('title', '')}")
+        lines.append(
+            f"Sponsor: {e.get('sponsor', '-')}"
+            f" | Requester: {e.get('requester', '-')}"
+        )
+        lines.append(
+            f"BA Owner: {e.get('ba_owner', '-')}"
+            f" | Current Task Owner: {e.get('current_owner', '-')}"
+        )
         lines.append(f"Cost Center: {e.get('cost_center', '-')}")
-        lines.append(f"Start Date: {e.get('start_date', '-')} | Duration (days): {e.get('duration_days')}")
+        lines.append(
+            f"Start Date: {e.get('start_date', '-')}"
+            f" | Duration (days): {e.get('duration_days')}"
+        )
         lines.append(f"DEM Status: {e.get('status', '-')}")
         lines.append(f"Workflow Status: {e.get('workflow_status', '-')}")
         lines.append(f"Priority (1–4): {e.get('priority', '2')}")
         lines.append(
             "SLA Status: "
-            + ("Breached — requires immediate attention." if e.get("sla_breached")
-               else "OK — project updated within acceptable window.")
+            + (
+                "SLA Breached — project requires immediate follow-up with Sponsor and IT lead."
+                if e.get("sla_breached")
+                else "SLA OK — project updated within acceptable window."
+            )
         )
 
         raw_notes = e.get("notes") or []
-        lines.append("Last Notes:")
         if raw_notes:
-            for n in raw_notes[-2:]:
-                lines.append("  - " + _format_note(n))
+            formatted_notes = [_format_note(n) for n in raw_notes]
+            last_two = formatted_notes[-2:]
+            lines.append("Last Notes (most recent entries):")
+            for n in last_two:
+                lines.append(f"- {n}")
         else:
-            lines.append("  (no notes registered)")
+            lines.append("Last Notes: (no notes registered)")
 
         lines.append("")
+        lines.append("-" * 78)
         lines.append("")
 
     return "\n".join(lines)
-
-
-
-
 # ---------------- Auth & Views ----------------
 
 
@@ -560,7 +601,6 @@ def add_dem_note(id):
         return jsonify({"error": "DEM no encontrado."}), 404
     return jsonify({"project": project})
 
-
 # ---- EDIT NOTE ---------------------------------------------------------
 @app.route("/api/dems/projects/<id>/note/edit", methods=["POST"])
 def edit_dem_note(id):
@@ -585,7 +625,7 @@ def edit_dem_note(id):
         # Update note content, keep date or refresh it
         notes[index] = {
             "text": new_text,
-            "date": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+            "date": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         }
         d["notes"] = notes
 
@@ -632,6 +672,7 @@ def delete_dem_note(id):
         return jsonify({"error": "DEM not found"}), 404
 
     return jsonify({"project": project})
+
 
 
 @app.route("/api/dems/projects/<id>/update", methods=["POST"])
@@ -911,68 +952,6 @@ def export_archived_excel():
     )
 
 
-@app.route("/api/dems/export_json", methods=["GET"])
-def export_dems_json():
-    """Export ALL DEM projects (active + archived) as a JSON backup file."""
-    maybe = require_auth()
-    if maybe is not None:
-        return jsonify({"error": "No autorizado"}), 401
-
-    dems = load_dems() or []
-    payload = json.dumps(dems, ensure_ascii=False, indent=2)
-    bio = io.BytesIO(payload.encode("utf-8"))
-    bio.seek(0)
-    return send_file(
-        bio,
-        as_attachment=True,
-        download_name="dems_backup.json",
-        mimetype="application/json; charset=utf-8",
-    )
-
-
-@app.route("/api/dems/import", methods=["POST"])
-def import_dems_json():
-    """Import DEM projects from a JSON payload.
-
-    Expected body:
-        {
-            "projects": [ ...dem objects... ]
-        }
-
-    Existing DEMs are merged by 'id'. If an imported DEM has the same 'id',
-    it will overwrite the existing one. DEMs without 'id' will get a new id.
-    """
-    maybe = require_auth()
-    if maybe is not None:
-        return jsonify({"error": "No autorizado"}), 401
-
-    data = request.get_json(silent=True) or {}
-    projects = data.get("projects")
-
-    if not isinstance(projects, list):
-        return jsonify({"error": "Invalid JSON structure: 'projects' must be a list."}), 400
-
-    current = load_dems() or []
-    by_id = {str(d.get("id")): d for d in current if d.get("id")}
-
-    for incoming in projects:
-        if not isinstance(incoming, dict):
-            continue
-        pid = str(incoming.get("id") or "").strip()
-        if not pid:
-            # assign a new id for DEMs without identifier
-            pid = f"dem_{int(time.time() * 1000)}"
-            incoming["id"] = pid
-        by_id[pid] = incoming
-
-    merged_list = list(by_id.values())
-    save_dems(merged_list)
-
-    # Return enriched view so UI can refresh immediately if needed
-    enriched = [enrich_dem(d) for d in merged_list]
-    return jsonify({"projects": enriched})
-
-
 @app.route("/api/dems/report", methods=["POST"])
 def dem_report():
     """Return the corporate portfolio text (used in the UI panel), EXCLUDING archived DEMs."""
@@ -992,9 +971,10 @@ def dem_report():
     return jsonify({"report": text})
 
 
+
 @app.route("/api/dems/download/<fmt>", methods=["GET"])
 def dem_download(fmt):
-    """Download the portfolio report as TXT / DOCX / PDF — now beautifully formatted."""
+    """Download the portfolio report as TXT / DOCX / PDF."""
     maybe = require_auth()
     if maybe is not None:
         return jsonify({"error": "No autorizado"}), 401
@@ -1003,18 +983,17 @@ def dem_download(fmt):
     if fmt not in ("txt", "pdf", "docx"):
         return jsonify({"error": "Formato no soportado."}), 400
 
-    # Only active (non-archived) DEMs
-    dems = [d for d in load_dems() if not d.get("archived", False)]
+    dems = load_dems()
     text = build_portfolio_text(dems)
 
-    # Split into structured blocks
+    # First line is our dynamic title with date + Andres Villanueva
     lines = text.split("\n")
-    title_line = lines[0] if lines else "Andres Villanueva DEMS Report"
-    blocks = "\n".join(lines[1:])
+    title = lines[0] if lines else "Andres Villanueva DEMS Report"
+    body = "\n".join(lines[1:]) if len(lines) > 1 else ""
 
-    # =============== TXT ===============
     if fmt == "txt":
-        bio = io.BytesIO(text.encode("utf-8"))
+        bio = io.BytesIO()
+        bio.write(text.encode("utf-8"))
         bio.seek(0)
         return send_file(
             bio,
@@ -1023,38 +1002,17 @@ def dem_download(fmt):
             mimetype="text/plain; charset=utf-8",
         )
 
-    # =============== DOCX ===============
     if fmt == "docx":
         if Document is None:
             return jsonify({"error": "python-docx no está disponible."}), 500
-
         doc = Document()
-
-        # --- STYLES ---
-        style_title = doc.styles['Title']
-        style_title.font.size = Pt(26)
-        style_title.font.bold = True
-
-        h1 = doc.styles['Heading 1']
-        h1.font.size = Pt(18)
-        h1.font.bold = True
-
-        body = doc.styles['Normal']
-        body.font.size = Pt(12)
-
-        # --- DOCUMENT ---
-        doc.add_heading(title_line, level=0)
+        doc.add_heading(title, level=1)
+        doc.add_paragraph(
+          
+        )
         doc.add_paragraph("")
-
-        for section in blocks.split("\n\n"):
-            if section.strip().startswith("1. "):
-                doc.add_heading(section.strip(), level=1)
-            elif section.strip().startswith("DEM:"):
-                doc.add_heading(section.strip(), level=2)
-            else:
-                doc.add_paragraph(section.strip())
-
-            doc.add_paragraph("")
+        for line in body.split("\n"):
+            doc.add_paragraph(line)
 
         bio = io.BytesIO()
         doc.save(bio)
@@ -1063,10 +1021,12 @@ def dem_download(fmt):
             bio,
             as_attachment=True,
             download_name="dems_portfolio.docx",
-            mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            mimetype=(
+                "application/"
+                "vnd.openxmlformats-officedocument.wordprocessingml.document"
+            ),
         )
 
-    # =============== PDF ===============
     if fmt == "pdf":
         if SimpleDocTemplate is None:
             return jsonify({"error": "reportlab no está disponible."}), 500
@@ -1074,33 +1034,14 @@ def dem_download(fmt):
         bio = io.BytesIO()
         doc = SimpleDocTemplate(bio, pagesize=A4)
         styles = getSampleStyleSheet()
-
-        title_style = styles["Title"]
-        title_style.fontSize = 26
-
-        h1_style = styles["Heading1"]
-        h1_style.fontSize = 18
-
-        normal = styles["BodyText"]
-        normal.fontSize = 11
-        normal.leading = 14
-
         story = []
-        story.append(Paragraph(title_line, title_style))
-        story.append(Spacer(1, 14))
-
-        for section in blocks.split("\n\n"):
-            sec = section.strip()
-
-            if sec.startswith("1. "):
-                story.append(Paragraph(sec, h1_style))
-            elif sec.startswith("DEM:"):
-                story.append(Paragraph(f"<b>{sec}</b>", normal))
-            else:
-                story.append(Paragraph(sec.replace("\n", "<br/>"), normal))
-
-            story.append(Spacer(1, 12))
-
+        story.append(Paragraph(title, styles["Title"]))
+        story.append(Spacer(1, 12))
+        for paragraph in body.split("\n\n"):
+            story.append(
+                Paragraph(paragraph.replace("\n", "<br />"), styles["Normal"])
+            )
+            story.append(Spacer(1, 8))
         doc.build(story)
         bio.seek(0)
         return send_file(
@@ -1110,8 +1051,7 @@ def dem_download(fmt):
             mimetype="application/pdf",
         )
 
-    return jsonify({"error": "Formato desconocido"}), 400
-
+    return jsonify({"error": "Formato no soportado."}), 400
 
 
 if __name__ == "__main__":
