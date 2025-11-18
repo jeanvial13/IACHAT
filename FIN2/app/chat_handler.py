@@ -301,8 +301,7 @@ def build_portfolio_text(dems):
 
         lines.append("")
 
-    return "
-".join(lines)
+    return "\n".join(lines)
 
 
 
