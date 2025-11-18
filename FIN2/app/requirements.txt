@@ -1,0 +1,7 @@
+flask
+openai
+python-docx
+pypdf
+openpyxl
+reportlab
+werkzeug
