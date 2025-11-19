@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Andres IA</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+  <div class="login-container">
+    <div class="login-box">
+      <h1 class="glitch" data-text="ACCESS CONTROL">ACCESS CONTROL</h1>
+      <p class="login-subtitle">SECURE TERMINAL // ANDRES IA</p>
+
+      <form method="post">
+        <div class="input-group">
+          <label class="cyber-label">USER ID</label>
+          <input type="text" name="username" class="cyber-input" required autocomplete="off">
+        </div>
+
+        <div class="input-group">
+          <label class="cyber-label">PASSPHRASE</label>
+          <input type="password" name="password" class="cyber-input" required>
+        </div>
+
+        <button type="submit" class="btn-cyber full-width">INITIALIZE LINK</button>
+      </form>
+
+      {% if error %}
+      <div class="error-msg">
+        ⚠️ ACCESS DENIED: {{ error }}
+      </div>
+      {% endif %}
+
+      <div class="quotes-login">
+        <p>"If You're Going Through Hell, Keep Going"</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cyberpunk Particles -->
+  <div class="scanline"></div>
+  <div class="particles-container" id="particles"></div>
+
+  <script>
+    const container = document.getElementById('particles');
+    const particleCount = 60;
+
+    for (let i = 0; i < particleCount; i++) {
+      const p = document.createElement('div');
+      p.classList.add('particle');
+
+      // Randomize properties
+      const left = Math.random() * 100;
+      const delay = Math.random() * 5;
+      const duration = 3 + Math.random() * 7; // 3s to 10s
+
+      p.style.left = left + '%';
+      p.style.animationDelay = delay + 's';
+      p.style.animationDuration = duration + 's';
+
+      // Random variations
+      if (Math.random() > 0.7) p.classList.add('large');
+      if (Math.random() > 0.8) p.classList.add('fast');
+
+      container.appendChild(p);
+    }
+  </script>
+
+  <style>
+    .login-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: var(--bg-dark);
+      position: relative;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    .login-container::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('https://media.giphy.com/media/oEI9uBYSzLpBK/giphy.gif');
+      /* Glitch GIF overlay */
+      opacity: 0.1;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      z-index: 0;
+    }
+
+    .login-container::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+      background-size: 100% 2px, 3px 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .login-box {
+      background: rgba(10, 10, 15, 0.9);
+      border: 1px solid var(--neon-cyan);
+      padding: 40px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 0 30px rgba(0, 243, 255, 0.1);
+      position: relative;
+      clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
+    }
+
+    .login-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--neon-yellow);
+    }
+
+    .login-subtitle {
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      margin-bottom: 32px;
+      letter-spacing: 2px;
+    }
+
+    .input-group {
+      margin-bottom: 24px;
+    }
+
+    .cyber-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--text-muted);
+      padding: 12px;
+      color: var(--neon-cyan);
+      font-family: var(--font-mono);
+      font-size: 16px;
+      margin-top: 8px;
+      transition: all 0.2s;
+    }
+
+    .cyber-input:focus {
+      outline: none;
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+    }
+
+    .full-width {
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .error-msg {
+      color: var(--neon-red);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      margin-top: 16px;
+      padding: 8px;
+      border: 1px solid var(--neon-red);
+      background: rgba(255, 42, 42, 0.1);
+    }
+
+    .quotes-login {
+      margin-top: 32px;
+      text-align: center;
+      font-style: italic;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-family: var(--font-mono);
+    }
+  </style>
+</body>
+
+</html>
