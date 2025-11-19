@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Andres IA</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+  <div class="login-container">
+    <div class="glitch-background"></div>
+    <div class="login-box">
+      <h1 class="glitch" data-text="ACCESS CONTROL">ACCESS CONTROL</h1>
+      <p class="login-subtitle">SECURE TERMINAL // ANDRES IA</p>
+
+      <form method="post">
+        <div class="input-group">
+          <label class="cyber-label">USER ID</label>
+          <input type="text" name="username" class="cyber-input" required autocomplete="off">
+        </div>
+
+        <div class="input-group">
+          <label class="cyber-label">PASSPHRASE</label>
+          <input type="password" name="password" class="cyber-input" required>
+        </div>
+
+        <button type="submit" class="btn-cyber full-width">INITIALIZE LINK</button>
+      </form>
+
+      {% if error %}
+      <div class="error-msg">
+        ⚠️ ACCESS DENIED: {{ error }}
+      </div>
+      {% endif %}
+
+      <div class="quotes-login">
+        <p>"If You're Going Through Hell, Keep Going"</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cyberpunk Wave Canvas -->
+  <canvas id="wave-canvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById("wave-canvas"); // Keeping ID as wave-canvas to match HTML
+    const ctx = canvas.getContext("2d");
+
+    let w = window.innerWidth;
+    let h = window.innerHeight;
+    canvas.width = w;
+    canvas.height = h;
+
+    const mouse = {
+      x: null,
+      y: null,
+      radius: 140 // radio de repulsión
+    };
+
+    // Actualizar mouse
+    window.addEventListener("mousemove", (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    window.addEventListener("mouseleave", () => {
+      mouse.x = null;
+      mouse.y = null;
+    });
+
+    window.addEventListener("resize", () => {
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas.width = w;
+      canvas.height = h;
+      createParticles(); // recrear partículas para ajustar al nuevo tamaño
+    });
+
+    class Particle {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.baseX = x;
+        this.baseY = y;
+
+        this.size = 2 + Math.random() * 2.5;
+        this.vx = (Math.random() - 0.5) * 0.6;
+        this.vy = (Math.random() - 0.5) * 0.6;
+        this.friction = 0.92;
+        this.ease = 0.02;
+      }
+
+      draw(gradient) {
+        ctx.beginPath();
+        ctx.fillStyle = gradient;
+        ctx.shadowBlur = 18;
+        ctx.shadowColor = "#00ccff";
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.closePath();
+        ctx.shadowBlur = 0;
+      }
+
+      update() {
+        // movimiento base
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // rebote suave en bordes
+        if (this.x < 0 || this.x > w) this.vx *= -1;
+        if (this.y < 0 || this.y > h) this.vy *= -1;
+
+        // volver lentamente a la posición base (efecto "flotando")
+        const dxBase = this.baseX - this.x;
+        const dyBase = this.baseY - this.y;
+        this.vx += dxBase * this.ease;
+        this.vy += dyBase * this.ease;
+
+        // fricción para que no se aceleren infinito
+        this.vx *= this.friction;
+        this.vy *= this.friction;
+
+        // repulsión del mouse
+        if (mouse.x !== null && mouse.y !== null) {
+          const dx = this.x - mouse.x;
+          const dy = this.y - mouse.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance < mouse.radius && distance > 0.5) {
+            const force = (mouse.radius - distance) / mouse.radius;
+            const dirX = dx / distance;
+            const dirY = dy / distance;
+
+            this.vx += dirX * force * 4.5; // fuerza de repulsión
+            this.vy += dirY * force * 4.5;
+          }
+        }
+      }
+    }
+
+    let particlesArray = [];
+
+    function createParticles() {
+      particlesArray = [];
+      const numberOfParticles = Math.floor((w * h) / 9000); // escala con la pantalla
+
+      for (let i = 0; i < numberOfParticles; i++) {
+        const x = Math.random() * w;
+        const y = Math.random() * h;
+        particlesArray.push(new Particle(x, y));
+      }
+    }
+
+    createParticles();
+
+    function animate() {
+      // fondo con "trail" para que se vea como rastro de luz
+      ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+      ctx.fillRect(0, 0, w, h);
+
+      // gradiente cyberpunk amarillo-azul
+      const gradient = ctx.createLinearGradient(0, 0, w, h);
+      gradient.addColorStop(0, "#00e5ff");  // azul neón
+      gradient.addColorStop(0.5, "#00b3ff");
+      gradient.addColorStop(1, "#ffd700");  // amarillo dorado
+
+      for (let i = 0; i < particlesArray.length; i++) {
+        const p = particlesArray[i];
+        p.update();
+        p.draw(gradient);
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+
+  <style>
+    .login-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: var(--bg-dark);
+      position: relative;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    .glitch-background {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      z-index: 0;
+      opacity: 0.5;
+      background-image: url('https://media.giphy.com/media/oEI9uBYSzLpBK/giphy.gif');
+      /* Or a CSS glitch effect */
+      mix-blend-mode: overlay;
+      pointer-events: none;
+    }
+
+
+
+
+
+    .login-box {
+      background: rgba(10, 10, 15, 0.9);
+      border: 1px solid var(--neon-cyan);
+      padding: 40px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 0 30px rgba(0, 243, 255, 0.1);
+      position: relative;
+      clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
+    }
+
+    .login-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--neon-yellow);
+    }
+
+    .login-subtitle {
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      margin-bottom: 32px;
+      letter-spacing: 2px;
+    }
+
+    .input-group {
+      margin-bottom: 24px;
+    }
+
+    .cyber-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--text-muted);
+      padding: 12px;
+      color: var(--neon-cyan);
+      font-family: var(--font-mono);
+      font-size: 16px;
+      margin-top: 8px;
+      transition: all 0.2s;
+    }
+
+    .cyber-input:focus {
+      outline: none;
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+    }
+
+    .full-width {
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .error-msg {
+      color: var(--neon-red);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      margin-top: 16px;
+      padding: 8px;
+      border: 1px solid var(--neon-red);
+      background: rgba(255, 42, 42, 0.1);
+    }
+
+    .quotes-login {
+      margin-top: 32px;
+      text-align: center;
+      font-style: italic;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-family: var(--font-mono);
+    }
+  </style>
+</body>
+
+</html>
