@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Andres IA</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <h1 class="glitch" data-text="IA ANDRES">IA ANDRES</h1>
+      <button id="new-chat-btn" class="btn-cyber"><span>+</span> NEW SESSION</button>
+
+      <div class="section">
+        <label for="model-select" class="cyber-label">NEURAL MODEL</label>
+        <select id="model-select" class="cyber-select">
+          <option value="gpt-4o-mini">GPT-4o-MINI</option>
+          <option value="gpt-4o">GPT-4o</option>
+        </select>
+      </div>
+
+      <div class="section">
+        <button id="dems-btn" type="button" class="btn-cyber secondary">📂 PROJECT MANAGER</button>
+      </div>
+
+      <div class="section">
+        <label class="cyber-label">DATA UPLOAD</label>
+        <div class="file-upload-wrapper">
+          <button type="button" class="file-upload-btn btn-cyber outline">📁 SELECT FILES</button>
+          <input id="file-input" type="file" multiple />
+        </div>
+        <div id="selected-file-name" class="file-name-display">NO DATA SELECTED</div>
+        <button id="upload-btn" class="btn-cyber small">UPLOAD & ANALYZE</button>
+        <div id="files-status" class="files-status"></div>
+      </div>
+
+      <div class="section">
+        <a href="https://platform.openai.com/usage" target="_blank" class="token-usage-btn cyber-link">
+          ⚡ TOKEN USAGE
+        </a>
+      </div>
+
+      <div class="section small">
+        <div class="quotes">
+          <p>“Hazlo por Tessita”</p>
+          <p>“No necesito suerte. Solo necesito avanzar.”</p>
+          <p>“Si el camino es peligroso, vale la pena.”</p>
+          <p>“No vine a ser uno más. Vine a romper la línea.”</p>
+        </div>
+      </div>
+    </aside>
+
+    <div class="holo-arrow"></div>
+
+    <main class="chat">
+      <header class="chat-header">
+        <div>
+          <strong class="glitch-small">ACTIVE LINK</strong>
+          <span id="status" class="status-dot">● ONLINE</span>
+        </div>
+        <div class="chat-header-actions">
+          <button id="clear-btn" class="btn-cyber text-only">CLEAR</button>
+          <button id="exit-btn" type="button" class="btn-cyber danger">EXIT</button>
+        </div>
+      </header>
+
+      <div id="chat-log" class="chat-log"></div>
+
+      <form id="chat-form" class="chat-input-area">
+        <textarea id="chat-input" placeholder="Enter command..." rows="1"></textarea>
+        <button type="submit" id="send-btn" class="btn-cyber icon-only">➤</button>
+      </form>
+    </main>
+  </div>
+
+  <!-- Cyberpunk Particles -->
+  <div class="scanline"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+
+  <script>
+    const chatLog = document.getElementById("chat-log");
+    const input = document.getElementById("chat-input");
+    const form = document.getElementById("chat-form");
+    const clearBtn = document.getElementById("clear-btn");
+    const newChatBtn = document.getElementById("new-chat-btn");
+    const modelSelect = document.getElementById("model-select");
+    const fileInput = document.getElementById("file-input");
+    const uploadBtn = document.getElementById("upload-btn");
+    const filesStatus = document.getElementById("files-status");
+    const fileNameText = document.getElementById("selected-file-name");
+    const fileUploadBtn = document.querySelector('.file-upload-btn');
+
+    let history = [];
+    let fileSummaries = [];
+
+    // Trigger file input when clicking the custom button
+    fileUploadBtn.addEventListener('click', () => fileInput.click());
+
+    function appendMessage(role, text) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "msg " + role;
+
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      // Simple markdown parsing could go here, but for now we just set text
+      // If you want advanced markdown, use marked.parse(text)
+      if (typeof marked !== 'undefined') {
+          bubble.innerHTML = marked.parse(text);
+      } else {
+          bubble.innerText = text;
+      }
+
+      wrapper.appendChild(bubble);
+      chatLog.appendChild(wrapper);
+      chatLog.scrollTop = chatLog.scrollHeight;
+      return bubble; // Return bubble to allow updating content
+    }
+
+    async function sendMessage(message) {
+      if (!message) return;
+      appendMessage("user", message);
+      history.push({ role: "user", content: message });
+
+      // Create a placeholder for the assistant's reply
+      const assistantBubble = appendMessage("assistant", "...");
+      
+      try {
+        const res = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message,
+            history,
+            model: modelSelect.value,
+            file_summaries: fileSummaries
+          })
+        });
+
+        if (!res.ok) {
+            throw new Error(`Server error: ${res.status}`);
+        }
+
+        // Handle streaming response
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let fullReply = "";
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value, { stream: true });
+            fullReply += chunk;
+            
+            // Update UI in real-time
+            if (typeof marked !== 'undefined') {
+                assistantBubble.innerHTML = marked.parse(fullReply);
+            } else {
+                assistantBubble.innerText = fullReply;
+            }
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+        // Update history with full reply
+        history.push({ role: "assistant", content: fullReply });
+
+      } catch (err) {
+        assistantBubble.innerText = "⚠️ Connection Error: " + err.message;
+      }
+    }
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = "";
+      sendMessage(text);
+    });
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        form.dispatchEvent(new Event("submit"));
+      }
+    });
+
+    clearBtn.addEventListener("click", () => {
+      history = [];
+      fileSummaries = [];
+      chatLog.innerHTML = "";
+    });
+
+    newChatBtn.addEventListener("click", () => {
+      history = [];
+      fileSummaries = [];
+      chatLog.innerHTML = "";
+      appendMessage("assistant", "System initialized. Ready for input.");
+    });
+
+    uploadBtn.addEventListener("click", async () => {
+      const files = fileInput.files;
+      if (!files || !files.length) {
+        filesStatus.innerText = ">> NO FILES SELECTED";
+        return;
+      }
+      filesStatus.innerText = ">> UPLOADING & ANALYZING...";
+      const fd = new FormData();
+      for (const f of files) {
+        fd.append("files", f);
+      }
+      try {
+        const res = await fetch("/upload", {
+          method: "POST",
+          body: fd
+        });
+        const data = await res.json();
+        if (data.files) {
+          fileSummaries = data.files;
+          filesStatus.innerText = ">> UPLOAD COMPLETE";
+          data.files.forEach(f => {
+            appendMessage("assistant", "**FILE ANALYZED:** " + f.filename + "\n\n" + f.summary);
+            history.push({ role: "assistant", content: "Summary of " + f.filename + "\n" + f.summary });
+          });
+        } else {
+          filesStatus.innerText = ">> ERROR: " + (data.error || "Unknown error");
+        }
+      } catch (err) {
+        filesStatus.innerText = ">> UPLOAD FAILED: " + err;
+      }
+    });
+
+    // Initial Message
+    appendMessage("assistant", "Wake up, samurai. System ready.");
+
+    // File input change handler
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files.length === 0) {
+        fileNameText.innerText = "NO DATA SELECTED";
+      } else if (fileInput.files.length === 1) {
+        fileNameText.innerText = fileInput.files[0].name.toUpperCase();
+      } else {
+        fileNameText.innerText = `${fileInput.files.length} FILES SELECTED`;
+      }
+    });
+
+    const demsBtn = document.getElementById("dems-btn");
+    const exitBtn = document.getElementById("exit-btn");
+
+    if (demsBtn) {
+      demsBtn.addEventListener("click", () => {
+        window.location.href = "/dems";
+      });
+    }
+
+    if (exitBtn) {
+      exitBtn.addEventListener("click", () => {
+        window.location.href = "/logout";
+      });
+    }
+  </script>
+</body>
+</html>
