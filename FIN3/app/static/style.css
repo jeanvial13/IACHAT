@@ -1,0 +1,1148 @@
+/* =========================================================
+   ANDRES IA - CYBERPUNK 2077 EDITION
+   ========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Roboto+Mono:wght@300;400;500&display=swap');
+
+:root {
+  /* --- Cyberpunk Palette --- */
+  --bg-dark: #050509;
+  --bg-panel: rgba(10, 10, 15, 0.95);
+  --bg-card: rgba(20, 20, 25, 0.8);
+
+  --neon-cyan: #00f3ff;
+  --neon-pink: #ff00ff;
+  --neon-yellow: #fcee0a;
+  --neon-red: #ff2a2a;
+
+  --text-main: #e0e0e0;
+  --text-muted: #888899;
+  --text-highlight: #ffffff;
+
+  /* --- Effects --- */
+  --border-glow: 0 0 10px rgba(0, 243, 255, 0.5);
+  --text-glow: 0 0 5px rgba(0, 243, 255, 0.8);
+  --scanline-color: rgba(0, 243, 255, 0.05);
+
+  /* --- Spacing & Radius --- */
+  --radius-none: 0px;
+  /* Cyberpunk is sharp */
+  --radius-sm: 2px;
+
+  --font-header: 'Rajdhani', sans-serif;
+  --font-mono: 'Roboto Mono', monospace;
+}
+
+/* ------------------- RESET & BASE ------------------- */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-header);
+  background: var(--bg-dark);
+  color: var(--text-main);
+  overflow-x: hidden;
+  min-height: 100vh;
+  background-image:
+    linear-gradient(0deg, transparent 24%, rgba(0, 243, 255, .03) 25%, rgba(0, 243, 255, .03) 26%, transparent 27%, transparent 74%, rgba(0, 243, 255, .03) 75%, rgba(0, 243, 255, .03) 76%, transparent 77%, transparent),
+    linear-gradient(90deg, transparent 24%, rgba(0, 243, 255, .03) 25%, rgba(0, 243, 255, .03) 26%, transparent 27%, transparent 74%, rgba(0, 243, 255, .03) 75%, rgba(0, 243, 255, .03) 76%, transparent 77%, transparent);
+  background-size: 50px 50px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--neon-cyan);
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neon-yellow);
+}
+
+/* ------------------- LAYOUT ------------------- */
+
+.app {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+/* ------------------- SIDEBAR ------------------- */
+
+.sidebar {
+  width: 300px;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--neon-cyan);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  flex-shrink: 0;
+  position: relative;
+  clip-path: polygon(0 0, 100% 0, 100% 98%, 92% 100%, 0 100%);
+}
+
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 100%;
+  background: var(--neon-yellow);
+  box-shadow: 0 0 10px var(--neon-yellow);
+}
+
+.sidebar h1 {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--neon-yellow);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 2px 2px 0px var(--neon-red);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section.small {
+  margin-top: auto;
+}
+
+/* Cyber Labels */
+.cyber-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--neon-cyan);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+/* Cyber Select */
+.cyber-select {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--neon-cyan);
+  color: var(--neon-cyan);
+  padding: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cyber-select:hover {
+  background: rgba(0, 243, 255, 0.1);
+  box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+}
+
+/* Cyber Buttons */
+/* Cyber Buttons - Default Yellow (Reverted) */
+.btn-cyber {
+  background: var(--neon-yellow);
+  color: #000;
+  border: none;
+  padding: 12px 24px;
+  font-family: var(--font-header);
+  font-weight: 700;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  cursor: pointer;
+  clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 0 10px rgba(252, 238, 10, 0.3);
+}
+
+.btn-cyber:hover {
+  background: #fffa50;
+  box-shadow: 0 0 20px rgba(252, 238, 10, 0.6), inset 0 0 10px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+  letter-spacing: 3px;
+}
+
+.btn-cyber:active {
+  transform: translateY(1px);
+  box-shadow: 0 0 5px rgba(252, 238, 10, 0.4);
+}
+
+/* Red Variant (for specific buttons) */
+.btn-cyber-red {
+  background: var(--neon-red);
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  font-family: var(--font-header);
+  font-weight: 700;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  cursor: pointer;
+  clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 0 10px rgba(255, 42, 42, 0.3);
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+.btn-cyber-red:hover {
+  background: #ff4444;
+  box-shadow: 0 0 20px rgba(255, 42, 42, 0.6);
+  transform: translateY(-2px);
+}
+
+.btn-cyber.secondary {
+  background: transparent;
+  border: 1px solid var(--neon-cyan);
+  color: var(--neon-cyan);
+}
+
+.btn-cyber.secondary:hover {
+  background: rgba(0, 243, 255, 0.1);
+  box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+}
+
+.btn-cyber.outline {
+  background: transparent;
+  border: 1px dashed var(--text-muted);
+  color: var(--text-muted);
+}
+
+.btn-cyber.outline:hover {
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+}
+
+.btn-cyber.small {
+  padding: 8px 16px;
+  font-size: 12px;
+}
+
+.btn-cyber.danger {
+  background: transparent;
+  border: 1px solid var(--neon-red);
+  color: var(--neon-red);
+  box-shadow: none;
+}
+
+.btn-cyber.danger:hover {
+  background: var(--neon-red);
+  color: #fff;
+  box-shadow: 0 0 15px var(--neon-red);
+}
+
+.btn-cyber.text-only {
+  background: transparent;
+  color: var(--text-muted);
+  padding: 0;
+  clip-path: none;
+  width: auto;
+}
+
+.btn-cyber.text-only:hover {
+  color: var(--neon-pink);
+  transform: none;
+  box-shadow: none;
+  text-shadow: 0 0 5px var(--neon-pink);
+}
+
+.btn-cyber.icon-only {
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  font-size: 20px;
+}
+
+/* File Upload */
+.file-upload-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.file-upload-wrapper input[type=file] {
+  display: none;
+}
+
+.file-name-display {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--neon-yellow);
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.files-status {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--neon-cyan);
+  min-height: 14px;
+}
+
+/* Token Usage */
+.cyber-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.2s;
+}
+
+.cyber-link:hover {
+  color: var(--neon-yellow);
+}
+
+/* Quotes */
+.quotes {
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  border-left: 2px solid var(--neon-pink);
+}
+
+/* ------------------- MAIN CHAT AREA ------------------- */
+
+.chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: transparent;
+}
+
+.chat-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(5, 5, 9, 0.8);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 5;
+}
+
+.chat-header strong {
+  font-size: 18px;
+  color: var(--neon-cyan);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.status-dot {
+  display: inline-block;
+  font-size: 10px;
+  color: var(--neon-yellow);
+  margin-left: 12px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  animation: blink 2s infinite;
+}
+
+@keyframes blink {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.chat-header-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.chat-log {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  scroll-behavior: smooth;
+}
+
+/* Messages */
+.msg {
+  display: flex;
+  width: 100%;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.msg.user {
+  justify-content: flex-end;
+}
+
+.msg.assistant {
+  justify-content: flex-start;
+}
+
+.bubble {
+  max-width: 80%;
+  padding: 16px 24px;
+  font-size: 15px;
+  line-height: 1.6;
+  position: relative;
+  font-family: var(--font-mono);
+}
+
+.msg.user .bubble {
+  background: rgba(252, 238, 10, 0.1);
+  border: 1px solid var(--neon-yellow);
+  color: var(--neon-yellow);
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}
+
+.msg.assistant .bubble {
+  background: rgba(0, 243, 255, 0.05);
+  border: 1px solid var(--neon-cyan);
+  color: var(--text-main);
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+}
+
+/* Markdown Styles */
+.bubble h1,
+.bubble h2,
+.bubble h3 {
+  color: var(--neon-pink);
+  margin-top: 0;
+  font-family: var(--font-header);
+  text-transform: uppercase;
+}
+
+.bubble code {
+  background: rgba(0, 0, 0, 0.5);
+  padding: 2px 6px;
+  color: var(--neon-cyan);
+  font-family: 'Courier New', monospace;
+}
+
+.bubble pre {
+  background: rgba(0, 0, 0, 0.8);
+  padding: 12px;
+  border: 1px solid var(--text-muted);
+  overflow-x: auto;
+}
+
+/* Chat Input */
+.chat-input-area {
+  padding: 20px 24px;
+  border-top: 1px solid var(--neon-cyan);
+  background: rgba(5, 5, 9, 0.95);
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.chat-input-area textarea {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--text-muted);
+  color: var(--neon-cyan);
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  resize: none;
+  min-height: 52px;
+  max-height: 200px;
+  transition: all 0.2s;
+}
+
+.chat-input-area textarea:focus {
+  outline: none;
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+}
+
+/* ------------------- DEM MANAGER (PROJECTS) ------------------- */
+
+.dems-layout {
+  padding: 24px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow-y: auto;
+}
+
+.dems-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dems-toolbar-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.dems-tabs {
+  display: inline-flex;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px;
+}
+
+.dems-tab {
+  padding: 8px 24px;
+  background: transparent;
+  border: 1px solid var(--neon-red);
+  /* Red border for tabs as requested (chips/tabs area) */
+  color: var(--neon-red);
+  font-family: var(--font-header);
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dems-tab.active {
+  background: var(--neon-red);
+  color: #fff;
+  box-shadow: 0 0 10px var(--neon-red);
+}
+
+/* Chips (Project Filter) - Requested RED */
+.dem-chip {
+  background: transparent;
+  border: 1px solid var(--neon-red);
+  color: var(--neon-red);
+  padding: 6px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+
+.dem-chip:hover,
+.dem-chip.active {
+  background: var(--neon-red);
+  color: #fff;
+  box-shadow: 0 0 10px var(--neon-red);
+}
+
+.dems-download-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dems-download-group button {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--text-muted);
+  color: var(--text-main);
+  padding: 6px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dems-download-group button:hover {
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+}
+
+#generate-report-btn {
+  border-color: var(--neon-yellow);
+  color: var(--neon-yellow);
+}
+
+#generate-ai-report-btn {
+  border-color: var(--neon-pink);
+  color: var(--neon-pink);
+  box-shadow: 0 0 5px rgba(255, 0, 255, 0.3);
+}
+
+#generate-ai-report-btn:hover {
+  background: var(--neon-pink);
+  color: #000;
+}
+
+.dems-search-row input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--text-muted);
+  padding: 12px 16px;
+  color: var(--neon-cyan);
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+.dems-search-row input:focus {
+  outline: none;
+  border-color: var(--neon-cyan);
+}
+
+/* Dashboard Cards */
+.dems-dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.dem-dash-card {
+  background: rgba(20, 20, 25, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.dem-dash-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, transparent 50%, var(--neon-cyan) 50%);
+  opacity: 0.5;
+}
+
+.dem-dash-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.dem-dash-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-highlight);
+  margin-top: 8px;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+/* Project Grid */
+.dems-projects {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 24px;
+}
+
+.dem-card {
+  background: rgba(10, 10, 15, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.dem-card:hover {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+}
+
+.dem-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--neon-cyan), transparent);
+}
+
+.dem-card-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-highlight);
+  text-transform: uppercase;
+}
+
+.dem-subtitle {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.dem-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.dem-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 4px 8px;
+  border: 1px solid var(--text-muted);
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.dem-tag.primary {
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+  background: rgba(0, 243, 255, 0.1);
+}
+
+.dem-tag.sla-breached {
+  border-color: var(--neon-red);
+  color: var(--neon-red);
+  background: rgba(255, 42, 42, 0.1);
+  animation: pulseRed 2s infinite;
+}
+
+@keyframes pulseRed {
+  0% {
+    box-shadow: 0 0 0 rgba(255, 42, 42, 0);
+  }
+
+  50% {
+    box-shadow: 0 0 10px rgba(255, 42, 42, 0.5);
+  }
+
+  100% {
+    box-shadow: 0 0 0 rgba(255, 42, 42, 0);
+  }
+}
+
+.dem-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 12px;
+  border-left: 2px solid var(--text-muted);
+}
+
+.dem-meta strong {
+  color: var(--text-main);
+}
+
+.dem-last-note {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-main);
+  padding: 12px;
+  background: rgba(255, 0, 255, 0.05);
+  border: 1px solid rgba(255, 0, 255, 0.2);
+  border-left: 3px solid var(--neon-pink);
+}
+
+.dem-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  flex-wrap: wrap;
+}
+
+.dem-actions button {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--text-muted);
+  color: var(--text-main);
+  padding: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dem-actions button:hover {
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+  background: rgba(0, 243, 255, 0.1);
+}
+
+.dem-actions button.danger:hover {
+  border-color: var(--neon-red);
+  color: var(--neon-red);
+  background: rgba(255, 42, 42, 0.1);
+}
+
+/* Report Output */
+#dem-report-output {
+  background: #111;
+  color: #ccc;
+  padding: 32px;
+  font-family: 'Courier New', monospace;
+  border: 1px solid var(--neon-cyan);
+  box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+  white-space: pre-wrap;
+}
+
+/* Modals */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: #0a0a0f;
+  border: 1px solid var(--neon-cyan);
+  padding: 32px;
+  width: 95vw;
+  /* Full screen width */
+  height: 90vh;
+  /* Full screen height */
+  max-width: none;
+  /* Remove max-width limit */
+  box-shadow: 0 0 30px rgba(0, 243, 255, 0.2);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-text-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+#summary-text-area {
+  flex: 1;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--neon-cyan);
+  color: var(--text-main);
+  font-family: var(--font-mono);
+  font-size: 18px;
+  /* Larger font */
+  padding: 20px;
+  resize: none;
+  line-height: 1.6;
+}
+
+.modal-content::before {
+  content: 'SYSTEM_OVERRIDE';
+  position: absolute;
+  top: -10px;
+  left: 20px;
+  background: #0a0a0f;
+  padding: 0 10px;
+  color: var(--neon-cyan);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.modal-content h2 {
+  color: var(--neon-yellow);
+  margin-top: 0;
+  text-transform: uppercase;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--neon-cyan);
+}
+
+.form-grid input,
+.form-grid select {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--text-muted);
+  padding: 10px;
+  color: #fff;
+  font-family: var(--font-mono);
+}
+
+.form-grid input:focus,
+.form-grid select:focus {
+  outline: none;
+  border-color: var(--neon-yellow);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+/* Glitch Effect */
+.glitch {
+  position: relative;
+  color: var(--neon-cyan);
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-dark);
+}
+
+.glitch::before {
+  left: 2px;
+  text-shadow: -1px 0 var(--neon-red);
+  clip: rect(24px, 550px, 90px, 0);
+  animation: glitch-anim-2 3s infinite linear alternate-reverse;
+}
+
+.glitch::after {
+  left: -2px;
+  text-shadow: -1px 0 var(--neon-pink);
+  clip: rect(85px, 550px, 140px, 0);
+  animation: glitch-anim 2.5s infinite linear alternate-reverse;
+}
+
+@keyframes glitch-anim {
+  0% {
+    clip: rect(14px, 9999px, 127px, 0);
+  }
+
+  20% {
+    clip: rect(85px, 9999px, 14px, 0);
+  }
+
+  40% {
+    clip: rect(120px, 9999px, 88px, 0);
+  }
+
+  60% {
+    clip: rect(2px, 9999px, 45px, 0);
+  }
+
+  80% {
+    clip: rect(100px, 9999px, 5px, 0);
+  }
+
+  100% {
+    clip: rect(50px, 9999px, 100px, 0);
+  }
+}
+
+@keyframes glitch-anim-2 {
+  0% {
+    clip: rect(120px, 9999px, 14px, 0);
+  }
+
+  20% {
+    clip: rect(2px, 9999px, 100px, 0);
+  }
+
+  40% {
+    clip: rect(50px, 9999px, 2px, 0);
+  }
+
+  60% {
+    clip: rect(14px, 9999px, 85px, 0);
+  }
+
+  80% {
+    clip: rect(100px, 9999px, 120px, 0);
+  }
+
+  100% {
+    clip: rect(85px, 9999px, 14px, 0);
+  }
+}
+
+/* Super Ultra Particle Effects */
+.particles-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--neon-cyan);
+  box-shadow: 0 0 10px var(--neon-cyan);
+  /* Stronger glow */
+  border-radius: 50%;
+  opacity: 0;
+  animation: floatUp 5s infinite linear;
+  /* Faster default */
+}
+
+.particle:nth-child(odd) {
+  background: var(--neon-pink);
+  box-shadow: 0 0 10px var(--neon-pink);
+  animation-duration: 7s;
+}
+
+.particle:nth-child(even) {
+  background: var(--neon-yellow);
+  box-shadow: 0 0 10px var(--neon-yellow);
+  animation-duration: 9s;
+}
+
+.particle.large {
+  width: 8px;
+  height: 8px;
+  filter: blur(2px);
+  animation-duration: 12s;
+}
+
+.particle.fast {
+  animation-duration: 3s;
+}
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(105vh) scale(0) translateX(0);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+    transform: translateY(90vh) scale(1) translateX(10px);
+  }
+
+  50% {
+    transform: translateY(50vh) scale(1.2) translateX(-10px);
+  }
+
+  90% {
+    opacity: 1;
+    transform: translateY(10vh) scale(1) translateX(10px);
+  }
+
+  100% {
+    transform: translateY(-10vh) scale(0) translateX(0);
+    opacity: 0;
+  }
+}
+
+.scanline {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: rgba(0, 243, 255, 0.1);
+  opacity: 0.5;
+  animation: scan 5s linear infinite;
+  pointer-events: none;
+  z-index: 999;
+}
+
+@keyframes scan {
+  0% {
+    top: -10%;
+  }
+
+  100% {
+    top: 110%;
+  }
+}
+
+/* Cyber Table */
+.cyber-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-main);
+}
+
+.cyber-table th {
+  text-align: left;
+  padding: 12px;
+  border-bottom: 1px solid var(--neon-cyan);
+  color: var(--neon-cyan);
+  text-transform: uppercase;
+}
+
+.cyber-table td {
+  padding: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cyber-table tr:hover td {
+  background: rgba(0, 243, 255, 0.05);
+  color: #fff;
+}
