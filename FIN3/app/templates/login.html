@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Andres IA</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+  <div class="login-container">
+    <canvas id="horizon-canvas"></canvas>
+    <div class="scanlines"></div>
+    <div class="login-box">
+      <h1 class="glitch" data-text="ACCESS CONTROL">ACCESS CONTROL</h1>
+      <p class="login-subtitle">SECURE TERMINAL // ANDRES IA</p>
+
+      <form method="post">
+        <div class="input-group">
+          <label class="cyber-label">USER ID</label>
+          <input type="text" name="username" class="cyber-input" required autocomplete="off">
+        </div>
+
+        <div class="input-group">
+          <label class="cyber-label">PASSPHRASE</label>
+          <input type="password" name="password" class="cyber-input" required>
+        </div>
+
+        <button type="submit" class="btn-cyber full-width">INITIALIZE LINK</button>
+      </form>
+
+      {% if error %}
+      <div class="error-msg">
+        ⚠️ ACCESS DENIED: {{ error }}
+      </div>
+      {% endif %}
+
+      <div class="quotes-login">
+        <p>"If You're Going Through Hell, Keep Going"</p>
+        <p>"At the End of the Game, the King and the Pawn Go Back in the Same Box"</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cyberpunk Wave Canvas -->
+  <canvas id="wave-canvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById("wave-canvas"); // Keeping ID as wave-canvas to match HTML
+    const ctx = canvas.getContext("2d");
+
+    let w = window.innerWidth;
+    let h = window.innerHeight;
+    canvas.width = w;
+    canvas.height = h;
+
+    const mouse = {
+      x: null,
+      y: null,
+      radius: 140 // radio de repulsión
+    };
+
+    // Actualizar mouse
+    window.addEventListener("mousemove", (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    window.addEventListener("mouseleave", () => {
+      mouse.x = null;
+      mouse.y = null;
+    });
+
+    window.addEventListener("resize", () => {
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas.width = w;
+      canvas.height = h;
+      createParticles(); // recrear partículas para ajustar al nuevo tamaño
+    });
+
+    class Particle {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.baseX = x;
+        this.baseY = y;
+
+        this.size = 2 + Math.random() * 2.5;
+        this.vx = (Math.random() - 0.5) * 0.6;
+        this.vy = (Math.random() - 0.5) * 0.6;
+        this.friction = 0.92;
+        this.ease = 0.02;
+      }
+
+      draw(gradient) {
+        ctx.beginPath();
+        ctx.fillStyle = gradient;
+        ctx.shadowBlur = 18;
+        ctx.shadowColor = "#00ccff";
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.closePath();
+        ctx.shadowBlur = 0;
+      }
+
+      update() {
+        // movimiento base
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // rebote suave en bordes
+        if (this.x < 0 || this.x > w) this.vx *= -1;
+        if (this.y < 0 || this.y > h) this.vy *= -1;
+
+        // volver lentamente a la posición base (efecto "flotando")
+        const dxBase = this.baseX - this.x;
+        const dyBase = this.baseY - this.y;
+        this.vx += dxBase * this.ease;
+        this.vy += dyBase * this.ease;
+
+        // fricción para que no se aceleren infinito
+        this.vx *= this.friction;
+        this.vy *= this.friction;
+
+        // repulsión del mouse
+        if (mouse.x !== null && mouse.y !== null) {
+          const dx = this.x - mouse.x;
+          const dy = this.y - mouse.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance < mouse.radius && distance > 0.5) {
+            const force = (mouse.radius - distance) / mouse.radius;
+            const dirX = dx / distance;
+            const dirY = dy / distance;
+
+            this.vx += dirX * force * 4.5; // fuerza de repulsión
+            this.vy += dirY * force * 4.5;
+          }
+        }
+      }
+    }
+
+    let particlesArray = [];
+
+    function createParticles() {
+      particlesArray = [];
+      const numberOfParticles = Math.floor((w * h) / 9000); // escala con la pantalla
+
+      for (let i = 0; i < numberOfParticles; i++) {
+        const x = Math.random() * w;
+        const y = Math.random() * h;
+        particlesArray.push(new Particle(x, y));
+      }
+    }
+
+    createParticles();
+
+    function animate() {
+      // fondo con "trail" para que se vea como rastro de luz
+      ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+      ctx.fillRect(0, 0, w, h);
+
+      // gradiente cyberpunk amarillo-azul
+      const gradient = ctx.createLinearGradient(0, 0, w, h);
+      gradient.addColorStop(0, "#00e5ff");  // azul neón
+      gradient.addColorStop(0.5, "#00b3ff");
+      gradient.addColorStop(1, "#ffd700");  // amarillo dorado
+
+      for (let i = 0; i < particlesArray.length; i++) {
+        const p = particlesArray[i];
+        p.update();
+        p.draw(gradient);
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+
+  <script>
+    /* ========= NEON HORIZON EFFECT ========= */
+    const horizonCanvas = document.getElementById('horizon-canvas');
+    const horizonCtx = horizonCanvas.getContext('2d');
+
+    let width, height;
+
+    // Stars
+    const stars = [];
+    const numStars = 200;
+
+    function initStars() {
+      stars.length = 0;
+      for (let i = 0; i < numStars; i++) {
+        stars.push({
+          x: Math.random() * width,
+          y: Math.random() * height * 0.5, // Top half
+          size: Math.random() * 1.5,
+          alpha: Math.random(),
+          speed: Math.random() * 0.02
+        });
+      }
+    }
+
+    function resizeHorizon() {
+      width = horizonCanvas.width = window.innerWidth;
+      height = horizonCanvas.height = window.innerHeight;
+      initStars();
+    }
+    window.addEventListener('resize', resizeHorizon);
+    resizeHorizon();
+
+    function drawHorizon() {
+      const time = Date.now() * 0.001;
+
+      horizonCtx.fillStyle = '#050505';
+      horizonCtx.fillRect(0, 0, width, height);
+
+      // Horizon line
+      const horizonY = height * 0.45;
+
+      // Gradient sky
+      const gradient = horizonCtx.createLinearGradient(0, 0, 0, horizonY);
+      gradient.addColorStop(0, '#000000');
+      gradient.addColorStop(1, '#1a0b2e'); // Dark purple near horizon
+      horizonCtx.fillStyle = gradient;
+      horizonCtx.fillRect(0, 0, width, horizonY);
+
+      // Draw Stars
+      stars.forEach(star => {
+        star.alpha += Math.sin(time * 2 + star.x) * 0.01; // Twinkle
+        if (star.alpha < 0.2) star.alpha = 0.2;
+        if (star.alpha > 1) star.alpha = 1;
+
+        horizonCtx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
+        horizonCtx.beginPath();
+        horizonCtx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        horizonCtx.fill();
+      });
+
+      // Sun with Pulse
+      const sunPulse = Math.sin(time * 2) * 2;
+      const sunRadius = 80 + sunPulse;
+
+      horizonCtx.save();
+      horizonCtx.shadowBlur = 40 + sunPulse * 2;
+      horizonCtx.shadowColor = '#ff2a2a';
+
+      horizonCtx.beginPath();
+      horizonCtx.arc(width / 2, horizonY - 40, sunRadius, 0, Math.PI * 2);
+      const sunGrad = horizonCtx.createLinearGradient(width / 2, horizonY - 130, width / 2, horizonY + 30);
+      sunGrad.addColorStop(0, '#fcee0a');
+      sunGrad.addColorStop(0.5, '#ff2a2a');
+      sunGrad.addColorStop(1, '#bd00ff');
+      horizonCtx.fillStyle = sunGrad;
+      horizonCtx.fill();
+      horizonCtx.restore();
+
+      // Grid floor
+      horizonCtx.save();
+      horizonCtx.beginPath();
+      horizonCtx.rect(0, horizonY, width, height - horizonY);
+      horizonCtx.clip();
+
+      // Floor background
+      const floorGrad = horizonCtx.createLinearGradient(0, horizonY, 0, height);
+      floorGrad.addColorStop(0, '#1a0b2e');
+      floorGrad.addColorStop(1, '#000');
+      horizonCtx.fillStyle = floorGrad;
+      horizonCtx.fillRect(0, horizonY, width, height - horizonY);
+
+      // Grid Lines
+      horizonCtx.strokeStyle = 'rgba(0, 243, 255, 0.5)';
+      horizonCtx.lineWidth = 1.5;
+      horizonCtx.shadowBlur = 10;
+      horizonCtx.shadowColor = '#00f3ff';
+
+      // Vertical perspective lines
+      const numVerticalLines = 30;
+      const perspectiveFactor = 2;
+      for (let i = -numVerticalLines; i <= numVerticalLines; i++) {
+        horizonCtx.beginPath();
+        // Fan out from center
+        const x = width / 2 + i * 80;
+        // Simple perspective: lines converge to center at horizon
+        horizonCtx.moveTo(x * perspectiveFactor - (width / 2) * (perspectiveFactor - 1), height);
+        horizonCtx.lineTo(width / 2, horizonY);
+        horizonCtx.stroke();
+      }
+
+      // Horizontal moving lines
+      const speed = 100;
+      const offset = (time * speed) % 50;
+
+      // Exponential spacing for 3D effect
+      for (let i = 0; i < 40; i++) {
+        const z = i * 50 - offset; // Distance
+        if (z < 1) continue;
+
+        // Project Z to Y
+        // Simple perspective projection: y = horizonY + (height-horizonY) / z * scale
+        // Let's use a simpler exponential loop for visual stability
+
+        const p = (i + (offset / 50)) / 20; // 0 to 1 progress
+        const y = horizonY + Math.pow(p, 2) * (height - horizonY);
+
+        if (y > height) continue;
+
+        horizonCtx.beginPath();
+        horizonCtx.moveTo(0, y);
+        horizonCtx.lineTo(width, y);
+
+        // Fade out near horizon
+        horizonCtx.globalAlpha = p;
+        horizonCtx.stroke();
+      }
+      horizonCtx.globalAlpha = 1;
+
+      horizonCtx.restore();
+
+      requestAnimationFrame(drawHorizon);
+    }
+    drawHorizon();
+  </script>
+
+  <style>
+    .login-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: var(--bg-dark);
+      position: relative;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    #horizon-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      background: #000;
+    }
+
+    .scanlines {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.2));
+      background-size: 100% 4px;
+      pointer-events: none;
+      z-index: 2;
+      opacity: 0.3;
+    }
+
+    .login-box {
+      background: rgba(10, 10, 15, 0.9);
+      border: 1px solid var(--neon-cyan);
+      padding: 40px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 0 30px rgba(0, 243, 255, 0.1);
+      position: relative;
+      clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
+    }
+
+    .login-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--neon-yellow);
+    }
+
+    .login-subtitle {
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      margin-bottom: 32px;
+      letter-spacing: 2px;
+    }
+
+    .input-group {
+      margin-bottom: 24px;
+    }
+
+    .cyber-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--text-muted);
+      padding: 12px;
+      color: var(--neon-cyan);
+      font-family: var(--font-mono);
+      font-size: 16px;
+      margin-top: 8px;
+      transition: all 0.2s;
+    }
+
+    .cyber-input:focus {
+      outline: none;
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+    }
+
+    .full-width {
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .error-msg {
+      color: var(--neon-red);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      margin-top: 16px;
+      padding: 8px;
+      border: 1px solid var(--neon-red);
+      background: rgba(255, 42, 42, 0.1);
+    }
+
+    .quotes-login {
+      margin-top: 32px;
+      text-align: center;
+      font-style: italic;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-family: var(--font-mono);
+    }
+  </style>
+</body>
+
+</html>
