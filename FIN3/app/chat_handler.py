@@ -72,7 +72,7 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret")
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 # Configuración
-DEFAULT_MODEL = "gpt-4o"
+DEFAULT_MODEL = "gpt-4.1"
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
@@ -543,12 +543,17 @@ def chat():
 
     messages.append({"role": "user", "content": user_content})
 
+    MAX_HISTORY = 12
+    messages = messages[-MAX_HISTORY:]
+
     def generate():
         try:
             stream = client.chat.completions.create(
                 model=model,
                 messages=messages,
                 stream=True,
+                timeout=60,
+                max_tokens=1000,
             )
             for chunk in stream:
                 if chunk.choices[0].delta.content is not None:
